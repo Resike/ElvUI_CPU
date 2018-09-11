@@ -1,0 +1,16 @@
+## Interface: 80000
+## Title: ElvUI Dev
+## Version: 0.1.2
+## Author: Resike
+## Notes: Development tools for ElvUI.
+## DefaultState: Enabled
+## Dependencies: ElvUI
+## LoadOnDemand: 1
+
+ElvUIDev.lua
+
+Widgets\Button.lua
+Widgets\CheckButton.lua
+Widgets\EditBox.lua
+Widgets\Table.lua
+Widgets\Window.lua
