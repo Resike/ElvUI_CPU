@@ -351,6 +351,26 @@ function ElvUIDev:ToggleFrame()
 	end
 end
 
+function ElvUIDev:RegisterPlugin(pluginName)
+	if (not self.plugins) then
+		self.plugins = {};
+	end
+	self.plugins[pluginName] = true;
+end
+
+function ElvUIDev:RegisterPluginModule(pluginName, moduleName, module)
+	if (not self.pluginModules) then
+		self.pluginModules = {};
+	end
+	self.pluginModules[pluginName] = self.pluginModules[pluginName] or {};
+	self.pluginModules[pluginName][moduleName] = module;
+	for key, func in pairs(module) do
+		if type(func) == "function" then
+			self:AddFunction(("(Z)%s %s: %s"):format(pluginName, moduleName, key), func);
+		end
+	end
+end
+
 function ElvUIDev:AddFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
@@ -534,6 +554,11 @@ end
 
 function ElvUIDev:UpdateFunctions()
 	UpdateAddOnCPUUsage("ElvUI")
+	if (self.plugins) then
+		for plugin, _ in pairs(self.plugins) do
+			UpdateAddOnCPUUsage(plugin);
+		end
+	end
 
 	for key, func in pairs(ElvUI) do
 		if type(func) == "function" then
@@ -676,6 +701,18 @@ function ElvUIDev:UpdateFunctions()
 	for key, func in pairs(UnitFrames) do
 		if type(func) == "function" then
 			self:UpdateFunction("UnitFrames:"..key, func)
+		end
+	end
+
+	if (self.pluginModules) then
+		for plugin,modules in pairs(self.pluginModules) do
+			for moduleName,module in pairs(modules) do
+				for key, func in pairs(module) do
+					if type(func) == "function" then
+						self:UpdateFunction(("(Z)%s %s: %s"):format(plugin:gsub("ElvUI_",""):sub(1,1), moduleName, key), func);
+					end
+				end
+			end
 		end
 	end
 
