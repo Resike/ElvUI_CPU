@@ -3,34 +3,24 @@ local AddonName, Addon = ...
 local ElvUI = LibStub("AceAddon-3.0"):GetAddon("ElvUI")
 Addon.ElvUI = ElvUI
 
-local Distributor = ElvUI:GetModule("Distributor")
-local PluginInstaller = ElvUI:GetModule("PluginInstaller")
-local Layout = ElvUI:GetModule("Layout")
-local ActionBars = ElvUI:GetModule("ActionBars")
-local Auras = ElvUI:GetModule("Auras")
-local Bags = ElvUI:GetModule("Bags")
-local Blizzard = ElvUI:GetModule("Blizzard")
-local Chat = ElvUI:GetModule("Chat")
-local DataBars = ElvUI:GetModule("DataBars")
-local DataTexts = ElvUI:GetModule("DataTexts")
-local Minimap = ElvUI:GetModule("Minimap")
-local WorldMap = ElvUI:GetModule("WorldMap")
-local AFK = ElvUI:GetModule("AFK")
-local ChatILvL = ElvUI:GetModule("ChatILvL")
-local DebugTools = ElvUI:GetModule("DebugTools")
-local Misc = ElvUI:GetModule("Misc")
-local RaidUtility = ElvUI:GetModule("RaidUtility")
-local Threat = ElvUI:GetModule("Threat")
-local Totems = ElvUI:GetModule("Totems")
-local NamePlates = ElvUI:GetModule("NamePlates")
-local Skins = ElvUI:GetModule("Skins")
-local Tooltip = ElvUI:GetModule("Tooltip")
-local UnitFrames = ElvUI:GetModule("UnitFrames")
-
 local ElvUIDev = { }
 Addon.ElvUIDev = ElvUIDev
 
-_G["ElvUIDev"] = ElvUIDev
+local getmetatable, setmetatable = getmetatable, setmetatable
+local math, print, type, pairs, tonumber = math, print, type, pairs, tonumber
+
+local CreateFrame = CreateFrame
+local GetAddOnCPUUsage = GetAddOnCPUUsage
+local GetAddOnMetadata = GetAddOnMetadata
+local GetCursorPosition = GetCursorPosition
+local GetFunctionCPUUsage = GetFunctionCPUUsage
+local UpdateAddOnCPUUsage = UpdateAddOnCPUUsage
+local PlaySound = PlaySound
+local GetTime = GetTime
+
+-- GLOBALS: GameFontHighlightSmall, UIParent, GameFontNormal
+
+_G.ElvUIDev = ElvUIDev
 
 math.round = function(num, decimals)
 	local mult = 10^(decimals or 0)
@@ -385,141 +375,11 @@ function ElvUIDev:AddFunctions()
 		end
 	end
 
-	for key, func in pairs(Distributor) do
-		if type(func) == "function" then
-			self:AddFunction("Distributor:"..key, func)
-		end
-	end
-
-	for key, func in pairs(PluginInstaller) do
-		if type(func) == "function" then
-			self:AddFunction("PluginInstaller:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Layout) do
-		if type(func) == "function" then
-			self:AddFunction("Layout:"..key, func)
-		end
-	end
-
-	for key, func in pairs(ActionBars) do
-		if type(func) == "function" then
-			self:AddFunction("ActionBars:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Auras) do
-		if type(func) == "function" then
-			self:AddFunction("Auras:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Bags) do
-		if type(func) == "function" then
-			self:AddFunction("Bags:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Blizzard) do
-		if type(func) == "function" then
-			self:AddFunction("Blizzard:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Chat) do
-		if type(func) == "function" then
-			self:AddFunction("Chat:"..key, func)
-		end
-	end
-
-	for key, func in pairs(DataBars) do
-		if type(func) == "function" then
-			self:AddFunction("DataBars:"..key, func)
-		end
-	end
-
-	for key, func in pairs(DataTexts) do
-		if type(func) == "function" then
-			self:AddFunction("DataTexts:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Minimap) do
-		if type(func) == "function" then
-			self:AddFunction("Minimap:"..key, func)
-		end
-	end
-
-	for key, func in pairs(WorldMap) do
-		if type(func) == "function" then
-			self:AddFunction("WorldMap:"..key, func)
-		end
-	end
-
-	for key, func in pairs(AFK) do
-		if type(func) == "function" then
-			self:AddFunction("AFK:"..key, func)
-		end
-	end
-
-	for key, func in pairs(ChatILvL) do
-		if type(func) == "function" then
-			self:AddFunction("ChatILvL:"..key, func)
-		end
-	end
-
-	for key, func in pairs(DebugTools) do
-		if type(func) == "function" then
-			self:AddFunction("DebugTools:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Misc) do
-		if type(func) == "function" then
-			self:AddFunction("Misc:"..key, func)
-		end
-	end
-
-	for key, func in pairs(RaidUtility) do
-		if type(func) == "function" then
-			self:AddFunction("RaidUtility:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Threat) do
-		if type(func) == "function" then
-			self:AddFunction("Threat:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Totems) do
-		if type(func) == "function" then
-			self:AddFunction("Totems:"..key, func)
-		end
-	end
-
-	for key, func in pairs(NamePlates) do
-		if type(func) == "function" then
-			self:AddFunction("NamePlates:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Skins) do
-		if type(func) == "function" then
-			self:AddFunction("Skins:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Tooltip) do
-		if type(func) == "function" then
-			self:AddFunction("Tooltip:"..key, func)
-		end
-	end
-
-	for key, func in pairs(UnitFrames) do
-		if type(func) == "function" then
-			self:AddFunction("UnitFrames:"..key, func)
+	for module, tbl in pairs(ElvUI.modules) do
+		for key, func in pairs(tbl) do
+			if type(func) == "function" then
+				self:AddFunction(module..': '..key, func)
+			end
 		end
 	end
 
@@ -566,141 +426,11 @@ function ElvUIDev:UpdateFunctions()
 		end
 	end
 
-	for key, func in pairs(Distributor) do
-		if type(func) == "function" then
-			self:UpdateFunction("Distributor:"..key, func)
-		end
-	end
-
-	for key, func in pairs(PluginInstaller) do
-		if type(func) == "function" then
-			self:UpdateFunction("PluginInstaller:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Layout) do
-		if type(func) == "function" then
-			self:UpdateFunction("Layout:"..key, func)
-		end
-	end
-
-	for key, func in pairs(ActionBars) do
-		if type(func) == "function" then
-			self:UpdateFunction("ActionBars:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Auras) do
-		if type(func) == "function" then
-			self:UpdateFunction("Auras:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Bags) do
-		if type(func) == "function" then
-			self:UpdateFunction("Bags:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Blizzard) do
-		if type(func) == "function" then
-			self:UpdateFunction("Blizzard:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Chat) do
-		if type(func) == "function" then
-			self:UpdateFunction("Chat:"..key, func)
-		end
-	end
-
-	for key, func in pairs(DataBars) do
-		if type(func) == "function" then
-			self:UpdateFunction("DataBars:"..key, func)
-		end
-	end
-
-	for key, func in pairs(DataTexts) do
-		if type(func) == "function" then
-			self:UpdateFunction("DataTexts:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Minimap) do
-		if type(func) == "function" then
-			self:UpdateFunction("Minimap:"..key, func)
-		end
-	end
-
-	for key, func in pairs(WorldMap) do
-		if type(func) == "function" then
-			self:UpdateFunction("WorldMap:"..key, func)
-		end
-	end
-
-	for key, func in pairs(AFK) do
-		if type(func) == "function" then
-			self:UpdateFunction("AFK:"..key, func)
-		end
-	end
-
-	for key, func in pairs(ChatILvL) do
-		if type(func) == "function" then
-			self:UpdateFunction("ChatILvL:"..key, func)
-		end
-	end
-
-	for key, func in pairs(DebugTools) do
-		if type(func) == "function" then
-			self:UpdateFunction("DebugTools:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Misc) do
-		if type(func) == "function" then
-			self:UpdateFunction("Misc:"..key, func)
-		end
-	end
-
-	for key, func in pairs(RaidUtility) do
-		if type(func) == "function" then
-			self:UpdateFunction("RaidUtility:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Threat) do
-		if type(func) == "function" then
-			self:UpdateFunction("Threat:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Totems) do
-		if type(func) == "function" then
-			self:UpdateFunction("Totems:"..key, func)
-		end
-	end
-
-	for key, func in pairs(NamePlates) do
-		if type(func) == "function" then
-			self:UpdateFunction("NamePlates:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Skins) do
-		if type(func) == "function" then
-			self:UpdateFunction("Skins:"..key, func)
-		end
-	end
-
-	for key, func in pairs(Tooltip) do
-		if type(func) == "function" then
-			self:UpdateFunction("Tooltip:"..key, func)
-		end
-	end
-
-	for key, func in pairs(UnitFrames) do
-		if type(func) == "function" then
-			self:UpdateFunction("UnitFrames:"..key, func)
+	for module, tbl in pairs(ElvUI.modules) do
+		for key, func in pairs(tbl) do
+			if type(func) == "function" then
+				self:UpdateFunction(module..': '..key, func)
+			end
 		end
 	end
 
