@@ -378,7 +378,7 @@ function ElvUIDev:AddFunctions()
 	for module, tbl in pairs(ElvUI.modules) do
 		for key, func in pairs(tbl) do
 			if type(func) == "function" then
-				self:AddFunction(module..': '..key, func)
+				self:AddFunction(module..":"..key, func)
 			end
 		end
 	end
@@ -429,7 +429,7 @@ function ElvUIDev:UpdateFunctions()
 	for module, tbl in pairs(ElvUI.modules) do
 		for key, func in pairs(tbl) do
 			if type(func) == "function" then
-				self:UpdateFunction(module..': '..key, func)
+				self:UpdateFunction(module..":"..key, func)
 			end
 		end
 	end
