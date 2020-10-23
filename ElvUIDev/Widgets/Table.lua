@@ -3,11 +3,12 @@ local AddonName, Addon = ...
 local ElvUIDev = Addon.ElvUIDev
 
 local CreateFrame = CreateFrame
+local BackdropTemplateMixin = BackdropTemplateMixin
 
 local Table = ElvUIDev:RegisterWidget("Table")
 
 function Table:Create(parent)
-	self.frame = CreateFrame("Frame", nil, parent or UIParent)
+	self.frame = CreateFrame("Frame", nil, parent or UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	self.frame:SetPoint("TopLeft", parent, "TopLeft", 0, 0)
 	self.frame:SetPoint("BottomRight", parent, "BottomRight", 0, 0)
 	self.frame:SetSize(800, 600)

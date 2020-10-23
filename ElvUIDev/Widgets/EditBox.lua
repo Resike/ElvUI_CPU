@@ -3,13 +3,14 @@ local AddonName, Addon = ...
 local ElvUIDev = Addon.ElvUIDev
 
 local CreateFrame = CreateFrame
+local BackdropTemplateMixin = BackdropTemplateMixin
 local GameFontHighlight = GameFontHighlight
 local GameFontNormal = GameFontNormal
 
 local EditBox = ElvUIDev:RegisterWidget("EditBox")
 
 function EditBox:Create(parent)
-	local frame = CreateFrame("EditBox", nil, parent)
+	local frame = CreateFrame("EditBox", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	frame:SetSize(200, 26)
 	frame:SetJustifyH("Left")
 	frame:SetAutoFocus(false)
