@@ -1,0 +1,15 @@
+## Interface: 11401
+## Title: |cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r
+## Version: 0.1.4
+## Author: Resike
+## DefaultState: Enabled
+## Dependencies: ElvUI
+## LoadOnDemand: 1
+
+ElvUI_CPU.lua
+
+Widgets\Button.lua
+Widgets\CheckButton.lua
+Widgets\EditBox.lua
+Widgets\Table.lua
+Widgets\Window.lua

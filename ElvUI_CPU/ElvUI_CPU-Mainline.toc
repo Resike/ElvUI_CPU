@@ -1,13 +1,12 @@
-## Interface: 90005
-## Title: ElvUI Dev
-## Version: 0.1.3
+## Interface: 90105
+## Title: |cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r
+## Version: 0.1.4
 ## Author: Resike
-## Notes: Development tools for ElvUI.
 ## DefaultState: Enabled
 ## Dependencies: ElvUI
 ## LoadOnDemand: 1
 
-ElvUIDev.lua
+ElvUI_CPU.lua
 
 Widgets\Button.lua
 Widgets\CheckButton.lua

@@ -3,13 +3,15 @@ local AddonName, Addon = ...
 local ElvUI = LibStub("AceAddon-3.0"):GetAddon("ElvUI")
 Addon.ElvUI = ElvUI
 
-local ElvUIDev = { }
-Addon.ElvUIDev = ElvUIDev
+local ElvUI_CPU = { }
+Addon.ElvUI_CPU = ElvUI_CPU
 
 local getmetatable, setmetatable = getmetatable, setmetatable
-local math, print, type, pairs, tonumber = math, print, type, pairs, tonumber
+local print, type, pairs, tonumber = print, type, pairs, tonumber
+local max, floor = max, floor
 
 local CreateFrame = CreateFrame
+local ResetCPUUsage = ResetCPUUsage
 local GetAddOnCPUUsage = GetAddOnCPUUsage
 local GetAddOnMetadata = GetAddOnMetadata
 local GetCursorPosition = GetCursorPosition
@@ -18,35 +20,37 @@ local UpdateAddOnCPUUsage = UpdateAddOnCPUUsage
 local PlaySound = PlaySound
 local GetTime = GetTime
 
--- GLOBALS: GameFontHighlightSmall, UIParent, GameFontNormal
+local UIParent = UIParent
+local GameFontHighlightSmall = GameFontHighlightSmall
+local GameFontNormal = GameFontNormal
 
-_G.ElvUIDev = ElvUIDev
+_G.ElvUI_CPU = ElvUI_CPU
 
-math.round = function(num, decimals)
+local round = function(num, decimals)
 	local mult = 10^(decimals or 0)
 
-	return math.floor(num * mult + 0.5) / mult
+	return floor(num * mult + 0.5) / mult
 end
 
-local L = Addon.L
+math.round = round
 
-ElvUIDev.events = CreateFrame("Frame")
-ElvUIDev.events:RegisterEvent("ADDON_LOADED")
+ElvUI_CPU.events = CreateFrame("Frame")
+ElvUI_CPU.events:RegisterEvent("ADDON_LOADED")
 
-ElvUIDev.events:SetScript("OnEvent", function(self, event, ...)
-	ElvUIDev[event](ElvUIDev, ...)
+ElvUI_CPU.events:SetScript("OnEvent", function(self, event, ...)
+	ElvUI_CPU[event](ElvUI_CPU, ...)
 end)
 
-ElvUIDev.widgets = { }
+ElvUI_CPU.widgets = { }
 
-function ElvUIDev:Print(msg, ...)
-	print("|cFF50C0FFElvUIDev|r: "..msg, ...)
+function ElvUI_CPU:Print(msg, ...)
+	print("|cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r: "..msg, ...)
 end
 
 -- Widgets
-function ElvUIDev:RegisterWidget(name)
+function ElvUI_CPU:RegisterWidget(name)
 	if self.widgets[name] then
-		ElvUIDev:Print("Widget is already registered with this name:", name)
+		ElvUI_CPU:Print("Widget is already registered with this name:", name)
 	end
 
 	local class = { }
@@ -57,11 +61,11 @@ function ElvUIDev:RegisterWidget(name)
 	return class
 end
 
-function ElvUIDev:CreateWidget(name, ...)
+function ElvUI_CPU:CreateWidget(name, ...)
 	local class = self.widgets[name]
 
 	if not class then
-		ElvUIDev:Print("Widget is not registered:", name)
+		ElvUI_CPU:Print("Widget is not registered:", name)
 
 		return
 	end
@@ -81,17 +85,21 @@ function ElvUIDev:CreateWidget(name, ...)
 	return frame
 end
 
-function ElvUIDev:GetWidget(name)
+function ElvUI_CPU:GetWidget(name)
 	return self.widgets[name]
 end
 
-function ElvUIDev:HasWidget(name)
+function ElvUI_CPU:HasWidget(name)
 	return not not self.widgets[name]
 end
 
-function ElvUIDev:ADDON_LOADED(addon)
+function ElvUI_CPU:GetLoadedTime()
+	return floor(GetTime() - ElvUI.loadedtime or self.loadedtime)
+end
+
+function ElvUI_CPU:ADDON_LOADED(addon)
 	if addon == AddonName then
-		ElvUIDev.loadedtime = GetTime()
+		ElvUI_CPU.loadedtime = GetTime()
 
 		self:CreateOptions()
 
@@ -102,12 +110,12 @@ function ElvUIDev:ADDON_LOADED(addon)
 			self.frame.main.devtools.table.loaded = true
 		end
 
-		ElvUIDev:Print("Addon loaded into the memory.")
+		ElvUI_CPU:Print("Addon loaded into the memory.")
 	end
 end
 
-function ElvUIDev:CreateOptions()
-	self.frame = self:CreateWidget("Window", "ElvUIDevOptions", UIParent)
+function ElvUI_CPU:CreateOptions()
+	self.frame = self:CreateWidget("Window", "ElvUI_CPUOptions", UIParent)
 	self.frame:SetFrameStrata("High")
 	self.frame:SetSize(800, 600)
 	self.frame:SetPoint("TopLeft", UIParent, "TopLeft", (UIParent:GetWidth() / 2) - 400, (-UIParent:GetHeight() / 2) + 300)
@@ -121,13 +129,13 @@ function ElvUIDev:CreateOptions()
 	if InterfaceOptionsFrame then
 		InterfaceOptionsFrame:HookScript("OnShow", function(self)
 			for i, v in pairs(UISpecialFrames) do
-				if v == "ElvUIDevOptions" then
+				if v == "ElvUI_CPUOptions" then
 					tremove(UISpecialFrames, i)
 				end
 			end
 		end)
 		InterfaceOptionsFrame:HookScript("OnHide", function(self)
-			tinsert(UISpecialFrames, "ElvUIDevOptions")
+			tinsert(UISpecialFrames, "ElvUI_CPUOptions")
 		end)
 	end]]
 
@@ -144,11 +152,11 @@ function ElvUIDev:CreateOptions()
 
 			local left, bottom = self:GetLeft(), self:GetBottom()
 
-			--local x = math.round((left + (self:GetWidth() / 2)) - (UIParent:GetWidth() / 2))
-			--local y = math.round((bottom + (self:GetHeight() / 2)) - (UIParent:GetHeight() / 2))
+			--local x = round((left + (self:GetWidth() / 2)) - (UIParent:GetWidth() / 2))
+			--local y = round((bottom + (self:GetHeight() / 2)) - (UIParent:GetHeight() / 2))
 
-			local x = math.round(left)
-			local y = math.round(-UIParent:GetHeight() + bottom + self:GetHeight())
+			local x = round(left)
+			local y = round(-UIParent:GetHeight() + bottom + self:GetHeight())
 
 			self:ClearAllPoints()
 			self:SetPoint("TopLeft", UIParent, "TopLeft", x, y)
@@ -160,7 +168,7 @@ function ElvUIDev:CreateOptions()
 		self.Bg:SetAlpha(self.Bg:GetAlpha() - (delta / 200))
 	end)]]
 
-	self.frame.title:SetText("ElvUI Dev")
+	self.frame.title:SetText("|cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r")
 
 	self.frame.version = self.frame:CreateFontString(nil, "Overlay")
 	self.frame.version:SetFontObject(GameFontNormal)
@@ -170,7 +178,7 @@ function ElvUIDev:CreateOptions()
 	self.frame.version:SetHeight(20)
 	self.frame.version:SetJustifyV("Middle")
 	self.frame.version:SetJustifyH("Right")
-	self.frame.version:SetText(GetAddOnMetadata("ElvUIDev", "Version"))
+	self.frame.version:SetText(GetAddOnMetadata("ElvUI_CPU", "Version"))
 	self.frame.version:SetWordWrap(false)
 
 	self.frame.main = { }
@@ -189,52 +197,55 @@ function ElvUIDev:CreateOptions()
 	self.frame.main.devtools.table:AddColumn("Overall usage", 0.15, "%.2f%%", true)
 
 	self.frame.main.devtools.table:SetScript("OnShow", function(frame)
-		ElvUIDev:UpdateFunctions()
+		ElvUI_CPU:UpdateFunctions()
 	end)
-
-	--[[self.frame.main.devtools.table.refresh = self:CreateWidget("CheckButtonIcon", self.frame.main.devtools.table)
-	self.frame.main.devtools.table.refresh:SetPoint("TopRight", self.frame.main.devtools.table, "BottomRight", 0, 0)
-	self.frame.main.devtools.table.refresh.text:SetText("Refresh")
-	self.frame.main.devtools.table.refresh.text:SetWordWrap(false)
-	self.frame.main.devtools.table.refresh:SetScript("OnClick", function(self, button)
-		ElvUIDev:UpdateFunctions()
-	end)]]
 
 	self.frame.main.devtools.table.toggle = self:CreateWidget("CheckButtonSquare", self.frame.main.devtools.table)
 	self.frame.main.devtools.table.toggle:SetPoint("TopLeft", self.frame.main.devtools.table, "BottomLeft", -2, 0)
 
 	self.frame.main.devtools.table.toggle.texture:SetSize(7, 13)
-	self.frame.main.devtools.table.toggle.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\Play")
+	self.frame.main.devtools.table.toggle.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
 	self.frame.main.devtools.table.toggle.texture:SetTexCoord(0.3125, 0.75, 0.0625, 0.875)
 
 	self.frame.main.devtools.table.toggle:SetScript("OnClick", function(self, button)
 		if self:GetChecked() then
-			self:GetParent():SetScript("OnUpdate", ElvUIDev.FunctionsOnUpdate)
+			self:GetParent():SetScript("OnUpdate", ElvUI_CPU.FunctionsOnUpdate)
 
 			self.texture:SetSize(9, 13)
-			self.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\Stop")
+			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Stop")
 			self.texture:SetTexCoord(0.1875, 0.75, 0.0625, 0.875)
 		else
 			self:GetParent():SetScript("OnUpdate", nil)
 
 			self.texture:SetSize(7, 13)
-			self.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\Play")
+			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
 			self.texture:SetTexCoord(0.3125, 0.75, 0.0625, 0.875)
 		end
 	end)
 
 	self.frame.main.devtools.table.refresh = self:CreateWidget("ButtonSquare", self.frame.main.devtools.table)
 	self.frame.main.devtools.table.refresh:SetPoint("TopLeft", self.frame.main.devtools.table.toggle, "TopRight", 0, 0)
-
 	self.frame.main.devtools.table.refresh.texture:SetTexture("Interface\\Buttons\\UI-RefreshButton")
-
 	self.frame.main.devtools.table.refresh:SetScript("OnClick", function(self, button)
-		ElvUIDev:UpdateFunctions()
+		ElvUI_CPU:UpdateFunctions()
+	end)
+
+	self.frame.main.devtools.table.clear = self:CreateWidget("ButtonSquare", self.frame.main.devtools.table)
+	self.frame.main.devtools.table.clear:SetPoint("TopLeft", self.frame.main.devtools.table.refresh, "TopRight", 0, 0)
+	self.frame.main.devtools.table.clear.texture:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+	self.frame.main.devtools.table.clear:SetScript("OnClick", function(self, button)
+		ElvUI_CPU.allow_reset = true
+
+		ResetCPUUsage()
+		ElvUI_CPU.loadedtime = GetTime()
+		ElvUI_CPU:UpdateFunctions()
+
+		ElvUI_CPU.allow_reset = nil
 	end)
 
 	self.frame.main.devtools.table.edit = self:CreateWidget("EditBox", self.frame.main.devtools.table)
 	self.frame.main.devtools.table.edit:SetSize(300, 26)
-	self.frame.main.devtools.table.edit:SetPoint("Left", self.frame.main.devtools.table.refresh, "Right", 3, 0)
+	self.frame.main.devtools.table.edit:SetPoint("Left", self.frame.main.devtools.table.clear, "Right", 3, 0)
 
 	self.frame.main.devtools.table.edit.clear = CreateFrame("Button", nil, self.frame.main.devtools.table.edit)
 	self.frame.main.devtools.table.edit.clear:SetSize(12, 12)
@@ -289,12 +300,12 @@ function ElvUIDev:CreateOptions()
 
 		self:SetSize(12, 12)
 
-		ElvUIDev.frame.main.devtools.table.edit:SetText("")
-		ElvUIDev.frame.main.devtools.table.edit:ClearFocus()
+		ElvUI_CPU.frame.main.devtools.table.edit:SetText("")
+		ElvUI_CPU.frame.main.devtools.table.edit:ClearFocus()
 	end)
 
 	self.frame.main.devtools.table.edit.clear.texture = self.frame.main.devtools.table.edit.clear:CreateTexture(nil, "Overlay")
-	self.frame.main.devtools.table.edit.clear.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\Close")
+	self.frame.main.devtools.table.edit.clear.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Close")
 	self.frame.main.devtools.table.edit.clear.texture:SetAllPoints(self.frame.main.devtools.table.edit.clear)
 
 	self.frame.main.devtools.table.edit.number = self.frame.main.devtools.table:CreateFontString(nil, "Background")
@@ -315,12 +326,12 @@ function ElvUIDev:CreateOptions()
 			self.clear:Show()
 		end
 
-		ElvUIDev.frame.main.devtools.table:SetFilter(text)
+		ElvUI_CPU.frame.main.devtools.table:SetFilter(text)
 
 		if text == "" then
-			ElvUIDev.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUIDev.frame.main.devtools.table.sorted, ElvUIDev:GetTotal(5))
+			ElvUI_CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUI_CPU.frame.main.devtools.table.sorted, ElvUI_CPU:GetTotal(5))
 		else
-			ElvUIDev.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUIDev.frame.main.devtools.table.filtered, ElvUIDev:GetFiltered(5))
+			ElvUI_CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUI_CPU.frame.main.devtools.table.filtered, ElvUI_CPU:GetFiltered(5))
 		end
 	end)
 
@@ -333,7 +344,7 @@ function ElvUIDev:CreateOptions()
 	PlaySound(841)
 end
 
-function ElvUIDev:ToggleFrame()
+function ElvUI_CPU:ToggleFrame()
 	if not self.frame:IsShown() then
 		self.frame:Show()
 	else
@@ -341,14 +352,14 @@ function ElvUIDev:ToggleFrame()
 	end
 end
 
-function ElvUIDev:RegisterPlugin(pluginName)
+function ElvUI_CPU:RegisterPlugin(pluginName)
 	if (not self.plugins) then
 		self.plugins = {};
 	end
 	self.plugins[pluginName] = true;
 end
 
-function ElvUIDev:RegisterPluginModule(pluginName, moduleName, module)
+function ElvUI_CPU:RegisterPluginModule(pluginName, moduleName, module)
 	if (not self.pluginModules) then
 		self.pluginModules = {};
 	end
@@ -361,14 +372,14 @@ function ElvUIDev:RegisterPluginModule(pluginName, moduleName, module)
 	end
 end
 
-function ElvUIDev:AddFunction(key, func)
+function ElvUI_CPU:AddFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
-	usage, calls = math.max(0, usage), calls
-	self.frame.main.devtools.table:AddRow(key, calls, (calls / math.floor(GetTime() - (ElvUI.loadedtime or ElvUIDev.loadedtime))), (usage / math.max(1, calls)), usage, (usage / math.max(1, GetAddOnCPUUsage("ElvUI"))) * 100)
+	usage, calls = max(0, usage), calls
+	self.frame.main.devtools.table:AddRow(key, calls, calls / self:GetLoadedTime(), (usage / max(1, calls)), usage, (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100)
 end
 
-function ElvUIDev:AddFunctions()
+function ElvUI_CPU:AddFunctions()
 	for key, func in pairs(ElvUI) do
 		if type(func) == "function" then
 			self:AddFunction("ElvUI:"..key, func)
@@ -386,33 +397,33 @@ function ElvUIDev:AddFunctions()
 	self.frame.main.devtools.table:ApplyFilter()
 end
 
-function ElvUIDev:UpdateFunction(key, func)
+function ElvUI_CPU:UpdateFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
-	usage, calls = math.max(0, usage), calls
+	usage, calls = max(0, usage), calls
 
-	local callspersec = (calls / math.floor(GetTime() - (ElvUI.loadedtime or ElvUIDev.loadedtime)))
-	local timepercall = (usage / math.max(1, calls))
-	local overallusage = (usage / math.max(1, GetAddOnCPUUsage("ElvUI"))) * 100
+	local callspersec = calls / self:GetLoadedTime()
+	local timepercall = usage / max(1, calls)
+	local overallusage = (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100
 
-	if calls == 0 and callspersec == 0 and timepercall == 0 and usage == 0 and overallusage == 0 then
+	if not ElvUI_CPU.allow_reset and (calls == 0 and callspersec == 0 and timepercall == 0 and usage == 0 and overallusage == 0) then
 		return
 	end
 
 	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage)
 end
 
-function ElvUIDev:FunctionsOnUpdate(elapsed)
+function ElvUI_CPU:FunctionsOnUpdate(elapsed)
 	self.time = (self.time or 0) + elapsed
 	if self.time < 1 then
 		return
 	end
 	self.time = 0
 
-	ElvUIDev:UpdateFunctions()
+	ElvUI_CPU:UpdateFunctions()
 end
 
-function ElvUIDev:UpdateFunctions()
+function ElvUI_CPU:UpdateFunctions()
 	UpdateAddOnCPUUsage("ElvUI")
 	if (self.plugins) then
 		for plugin, _ in pairs(self.plugins) do
@@ -448,14 +459,14 @@ function ElvUIDev:UpdateFunctions()
 
 	self.frame.main.devtools.table:Update()
 
-	if ElvUIDev.frame.main.devtools.table.edit:GetText() == "" then
-		ElvUIDev.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUIDev.frame.main.devtools.table.sorted, ElvUIDev:GetTotal(5))
+	if ElvUI_CPU.frame.main.devtools.table.edit:GetText() == "" then
+		ElvUI_CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUI_CPU.frame.main.devtools.table.sorted, ElvUI_CPU:GetTotal(5))
 	else
-		ElvUIDev.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUIDev.frame.main.devtools.table.filtered, ElvUIDev:GetFiltered(5))
+		ElvUI_CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUI_CPU.frame.main.devtools.table.filtered, ElvUI_CPU:GetFiltered(5))
 	end
 end
 
-function ElvUIDev:GetTotal(row)
+function ElvUI_CPU:GetTotal(row)
 	local x = 0
 
 	for i = 1, #self.frame.main.devtools.table.sorted do
@@ -465,7 +476,7 @@ function ElvUIDev:GetTotal(row)
 	return x
 end
 
-function ElvUIDev:GetFiltered(row)
+function ElvUI_CPU:GetFiltered(row)
 	local x = 0
 
 	for i = 1, #self.frame.main.devtools.table.filtered do
@@ -475,7 +486,7 @@ function ElvUIDev:GetFiltered(row)
 	return x
 end
 
-function ElvUIDev:MakeScaleable(frame)
+function ElvUI_CPU:MakeScaleable(frame)
 	if not frame then
 		return
 	end
@@ -496,8 +507,8 @@ function ElvUIDev:MakeScaleable(frame)
 	end
 
 	frame:SetMovable(true)
-	frame:SetMaxResize(math.round(frame.width * 1.50375), math.round(frame.height * 1.50375))
-	frame:SetMinResize(math.round(frame.width * 0.66125), math.round(frame.height * 0.66125))
+	frame:SetMaxResize(round(frame.width * 1.50375), round(frame.height * 1.50375))
+	frame:SetMinResize(round(frame.width * 0.66125), round(frame.height * 0.66125))
 	frame:SetUserPlaced(true)
 
 	frame.br = CreateFrame("Frame", nil, frame)
@@ -512,17 +523,17 @@ function ElvUIDev:MakeScaleable(frame)
 	frame.br.texture:SetPoint("TopLeft", frame.br, "TopLeft", 0, 0)
 	frame.br.texture:SetWidth(16)
 	frame.br.texture:SetHeight(16)
-	frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+	frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 
 	frame.br:SetScript("OnEnter", function(self)
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
 	end)
 	frame.br:SetScript("OnLeave", function(self)
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 	end)
 	frame.br:SetScript("OnMouseDown", function(self, button)
 		if button == "LeftButton" then
@@ -531,30 +542,30 @@ function ElvUIDev:MakeScaleable(frame)
 			frame:StartSizing("Right")
 		end
 
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
 
 		frame.version:SetFormattedText("%.3f", frame.scale)
 	end)
 	frame.br:SetScript("OnMouseUp", function(self, button)
 		if button == "MiddleButton" then
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 		end
 
 		local x, y = GetCursorPosition()
 		local fx = self:GetLeft() * self:GetEffectiveScale()
 		local fy = self:GetBottom() * self:GetEffectiveScale()
 		if x >= fx and x <= (fx + self:GetWidth()) and y >= fy and y <= (fy + self:GetHeight()) then
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
 		else
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 		end
 
 		frame.resizing = nil
@@ -562,7 +573,7 @@ function ElvUIDev:MakeScaleable(frame)
 		frame:StopMovingOrSizing()
 		frame:SetResizable(false)
 
-		frame.version:SetText(GetAddOnMetadata("ElvUIDev", "Version"))
+		frame.version:SetText(GetAddOnMetadata("ElvUI_CPU", "Version"))
 	end)
 
 	frame.bl = CreateFrame("Frame", nil, frame)
@@ -579,17 +590,17 @@ function ElvUIDev:MakeScaleable(frame)
 	frame.bl.texture:SetPoint("TopLeft", frame.bl, "TopLeft", 0, 0)
 	frame.bl.texture:SetWidth(16)
 	frame.bl.texture:SetHeight(16)
-	frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+	frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 
 	frame.bl:SetScript("OnEnter", function(self)
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
 	end)
 	frame.bl:SetScript("OnLeave", function(self)
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 	end)
 	frame.bl:SetScript("OnMouseDown", function(self, button)
 		if button == "LeftButton" then
@@ -598,30 +609,30 @@ function ElvUIDev:MakeScaleable(frame)
 			frame:StartSizing("Left")
 		end
 
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
 
 		frame.version:SetFormattedText("%.3f", frame.scale)
 	end)
 	frame.bl:SetScript("OnMouseUp", function(self, button)
 		if button == "MiddleButton" then
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 		end
 
 		local x, y = GetCursorPosition()
 		local fx = self:GetLeft() * self:GetEffectiveScale()
 		local fy = self:GetBottom() * self:GetEffectiveScale()
 		if x >= fx and x <= (fx + self:GetWidth()) and y >= fy and y <= (fy + self:GetHeight()) then
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
 		else
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 		end
 
 		frame.resizing = nil
@@ -629,7 +640,7 @@ function ElvUIDev:MakeScaleable(frame)
 		frame:StopMovingOrSizing()
 		frame:SetResizable(false)
 
-		frame.version:SetText(GetAddOnMetadata("ElvUIDev", "Version"))
+		frame.version:SetText(GetAddOnMetadata("ElvUI_CPU", "Version"))
 	end)
 
 	frame.tl = CreateFrame("Frame", nil, frame)
@@ -646,17 +657,17 @@ function ElvUIDev:MakeScaleable(frame)
 	frame.tl.texture:SetPoint("TopLeft", frame.tl, "TopLeft", 0, 0)
 	frame.tl.texture:SetWidth(16)
 	frame.tl.texture:SetHeight(16)
-	frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+	frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 
 	frame.tl:SetScript("OnEnter", function(self)
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
 	end)
 	frame.tl:SetScript("OnLeave", function(self)
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 	end)
 	frame.tl:SetScript("OnMouseDown", function(self, button)
 		if button == "LeftButton" then
@@ -666,30 +677,30 @@ function ElvUIDev:MakeScaleable(frame)
 			frame:StartSizing("Top")
 		end
 
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
-		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
+		frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
 
 		frame.version:SetFormattedText("%.3f", frame.scale)
 	end)
 	frame.tl:SetScript("OnMouseUp", function(self, button)
 		if button == "MiddleButton" then
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 		end
 
 		local x, y = GetCursorPosition()
 		local fx = self:GetLeft() * self:GetEffectiveScale()
 		local fy = self:GetBottom() * self:GetEffectiveScale()
 		if x >= fx and x <= (fx + self:GetWidth()) and y >= fy and y <= (fy + self:GetHeight()) then
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
 		else
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.bl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 		end
 
 		frame.resizing = nil
@@ -697,7 +708,7 @@ function ElvUIDev:MakeScaleable(frame)
 		frame:StopMovingOrSizing()
 		frame:SetResizable(false)
 
-		frame.version:SetText(GetAddOnMetadata("ElvUIDev", "Version"))
+		frame.version:SetText(GetAddOnMetadata("ElvUI_CPU", "Version"))
 	end)
 
 	frame.tr = CreateFrame("Frame", nil, frame)
@@ -714,17 +725,17 @@ function ElvUIDev:MakeScaleable(frame)
 	frame.tr.texture:SetPoint("TopLeft", frame.tr, "TopLeft", 0, 0)
 	frame.tr.texture:SetWidth(16)
 	frame.tr.texture:SetHeight(16)
-	frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+	frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 
 	frame.tr:SetScript("OnEnter", function(self)
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
 	end)
 	frame.tr:SetScript("OnLeave", function(self)
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 	end)
 	frame.tr:SetScript("OnMouseDown", function(self, button)
 		if button == "LeftButton" then
@@ -734,30 +745,30 @@ function ElvUIDev:MakeScaleable(frame)
 			frame:StartSizing("Top")
 		end
 
-		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
-		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
-		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberDown")
+		frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
+		frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
+		frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberDown")
 
 		frame.version:SetFormattedText("%.3f", frame.scale)
 	end)
 	frame.tr:SetScript("OnMouseUp", function(self, button)
 		if button == "MiddleButton" then
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 		end
 
 		local x, y = GetCursorPosition()
 		local fx = self:GetLeft() * self:GetEffectiveScale()
 		local fy = self:GetBottom() * self:GetEffectiveScale()
 		if x >= fx and x <= (fx + self:GetWidth()) and y >= fy and y <= (fy + self:GetHeight()) then
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberHighlight")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberHighlight")
 		else
-			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
-			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUIDev\\Textures\\SizeGrabberUp")
+			frame.tr.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.tl.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
+			frame.br.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\SizeGrabberUp")
 		end
 
 		frame.resizing = nil
@@ -765,7 +776,7 @@ function ElvUIDev:MakeScaleable(frame)
 		frame:StopMovingOrSizing()
 		frame:SetResizable(false)
 
-		frame.version:SetText(GetAddOnMetadata("ElvUIDev", "Version"))
+		frame.version:SetText(GetAddOnMetadata("ElvUI_CPU", "Version"))
 	end)
 
 	frame:SetScript("OnSizeChanged", function(self)
@@ -778,13 +789,13 @@ function ElvUIDev:MakeScaleable(frame)
 		if self.direction == "TopLeft" or self.direction == "TopRight" then
 			self:ClearAllPoints()
 			if self.direction == "TopLeft" then
-				local x = math.round(-UIParent:GetWidth() + self:GetRight())
-				local y = math.round(bottom)
+				local x = round(-UIParent:GetWidth() + self:GetRight())
+				local y = round(bottom)
 
 				self:SetPoint("BottomRight", UIParent, "BottomRight", x, y)
 			else
-				local x = math.round(left)
-				local y = math.round(bottom)
+				local x = round(left)
+				local y = round(bottom)
 
 				self:SetPoint("BottomLeft", UIParent, "BottomLeft", x, y)
 			end
@@ -793,13 +804,13 @@ function ElvUIDev:MakeScaleable(frame)
 			self.scale = scale
 			--local modifier = ((1 - scale) / 1.8) -- Figure out why the hell do we need this.
 			--local xy = modifier / (scale + 1.5)
-			self:SetWidth(math.round(frame.width * scale))
+			self:SetWidth(round(frame.width * scale))
 			--frame.overlay:SetScale(scale)
 			self.overlay:SetScale(scale)
-			--self.main.menu:SetPoint("TopLeft", self.main, "TopLeft", 50, math.round(-43 / scale))
+			--self.main.menu:SetPoint("TopLeft", self.main, "TopLeft", 50, round(-43 / scale))
 
-			self.shadow.upper:SetPoint("TopLeft", 0, math.round(-21 / self.scale))
-			self.shadow.upper:SetPoint("TopRight", math.round(-2 / self.scale), math.round(-21 / self.scale))
+			self.shadow.upper:SetPoint("TopLeft", 0, round(-21 / self.scale))
+			self.shadow.upper:SetPoint("TopRight", round(-2 / self.scale), round(-21 / self.scale))
 			self.shadow.upper:SetScale(scale)
 
 			for i = 1, #self.main.devtools.table.frame.columns do
@@ -809,34 +820,34 @@ function ElvUIDev:MakeScaleable(frame)
 
 				local column = self.main.devtools.table.frame.columns[i][1]
 
-				column:SetWidth(math.round(self.main.devtools.table.frame:GetWidth() * self.main.devtools.table.frame.columns[i][6]))
-				column:SetMaxResize(math.round(column:GetWidth() * 2), math.round(column:GetHeight() * 2))
-				column:SetMinResize(math.round(column:GetWidth() / 1.4), math.round(column:GetHeight() / 1.4))
+				column:SetWidth(round(self.main.devtools.table.frame:GetWidth() * self.main.devtools.table.frame.columns[i][6]))
+				column:SetMaxResize(round(column:GetWidth() * 2), round(column:GetHeight() * 2))
+				column:SetMinResize(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4))
 			end
 
-			local y = math.round(self:GetHeight() - (self.overlay:GetHeight() * scale) + 5)
+			local y = round(self:GetHeight() - (self.overlay:GetHeight() * scale) + 5)
 			self.main.devtools.table:SetPoint("TopLeft", self, "TopLeft", 2 + 20, -y)
 
 			self.version:SetFormattedText("%.3f", self.scale)
 
-			--ElvUIDev:ScaleChildrens(self, scale)
+			--ElvUI_CPU:ScaleChildrens(self, scale)
 		else
 			self:ClearAllPoints()
-			local x = math.round(left)
-			local y = math.round(-UIParent:GetHeight() + bottom + self:GetHeight())
+			local x = round(left)
+			local y = round(-UIParent:GetHeight() + bottom + self:GetHeight())
 			self:SetPoint("TopLeft", UIParent, "TopLeft", x, y)
 
 			local scale = self:GetWidth() / frame.width
 			self.scale = scale
 			--local modifier = ((1 - scale) / 1.8) -- Figure out why the hell do we need this.
 			--local xy = modifier / (scale + 1.5)
-			self:SetHeight(math.round(frame.height * scale))
+			self:SetHeight(round(frame.height * scale))
 			--frame.overlay:SetScale(scale)
 			self.overlay:SetScale(scale)
-			--self.main.menu:SetPoint("TopLeft", self.main, "TopLeft", 50, math.round(-43 / scale))
+			--self.main.menu:SetPoint("TopLeft", self.main, "TopLeft", 50, round(-43 / scale))
 
-			self.shadow.upper:SetPoint("TopLeft", 0, math.round(-21 / self.scale))
-			self.shadow.upper:SetPoint("TopRight", math.round(-2 / self.scale), math.round(-21 / self.scale))
+			self.shadow.upper:SetPoint("TopLeft", 0, round(-21 / self.scale))
+			self.shadow.upper:SetPoint("TopRight", round(-2 / self.scale), round(-21 / self.scale))
 			self.shadow.upper:SetScale(scale)
 
 			for i = 1, #self.main.devtools.table.frame.columns do
@@ -846,22 +857,22 @@ function ElvUIDev:MakeScaleable(frame)
 
 				local column = self.main.devtools.table.frame.columns[i][1]
 
-				column:SetWidth(math.round(self.main.devtools.table.frame:GetWidth() * self.main.devtools.table.frame.columns[i][6]))
-				column:SetMaxResize(math.round(column:GetWidth() * 2), math.round(column:GetHeight() * 2))
-				column:SetMinResize(math.round(column:GetWidth() / 1.4), math.round(column:GetHeight() / 1.4))
+				column:SetWidth(round(self.main.devtools.table.frame:GetWidth() * self.main.devtools.table.frame.columns[i][6]))
+				column:SetMaxResize(round(column:GetWidth() * 2), round(column:GetHeight() * 2))
+				column:SetMinResize(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4))
 			end
 
-			local y = math.round(self:GetHeight() - (self.overlay:GetHeight() * scale) + 5)
+			local y = round(self:GetHeight() - (self.overlay:GetHeight() * scale) + 5)
 			self.main.devtools.table:SetPoint("TopLeft", self, "TopLeft", 2 + 20, -y)
 
 			self.version:SetFormattedText("%.3f", self.scale)
 
-			--ElvUIDev:ScaleChildrens(self, scale)
+			--ElvUI_CPU:ScaleChildrens(self, scale)
 		end
 	end)
 end
 
-function ElvUIDev:ScaleChildrens(frame, scale)
+function ElvUI_CPU:ScaleChildrens(frame, scale)
 	--local childrens = {frame:GetChildren()}
 	--for _, child in ipairs(childrens) do
 	for i = 1, #self.frame.childrens do

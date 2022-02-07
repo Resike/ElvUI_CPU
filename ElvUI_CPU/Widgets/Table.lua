@@ -1,11 +1,20 @@
-local AddonName, Addon = ...
+local _, Addon = ...
 
-local ElvUIDev = Addon.ElvUIDev
+local ElvUI_CPU = Addon.ElvUI_CPU
 
+local assert, strfind, tostring = assert, strfind, tostring
+local type, select, sort = type, select, sort
+
+local min, max, round = min, max, math.round
+
+local UIParent = UIParent
+local PlaySound = PlaySound
 local CreateFrame = CreateFrame
 local BackdropTemplateMixin = BackdropTemplateMixin
+local GameFontHighlightSmall = GameFontHighlightSmall
+local GameFontNormalSmall = GameFontNormalSmall
 
-local Table = ElvUIDev:RegisterWidget("Table")
+local Table = ElvUI_CPU:RegisterWidget("Table")
 
 function Table:Create(parent)
 	self.frame = CreateFrame("Frame", nil, parent or UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -164,7 +173,7 @@ function Table:GetSortedColumn()
 end
 
 function Table:SetSortedColumn(id, desc)
-	self.frame.sortedheader = math.max(1, math.min(#(self.frame.columns), id))
+	self.frame.sortedheader = max(1, min(#(self.frame.columns), id))
 	self.frame.descending = not not desc
 	self:SortColumn()
 end
@@ -177,7 +186,7 @@ function Table:SortColumn()
 		items = self.frame.sorted
 	end
 
-	table.sort(items, self.frame.columns[self.frame.sortedheader][5])
+	sort(items, self.frame.columns[self.frame.sortedheader][5])
 
 	self:UpdateItems()
 end
@@ -220,9 +229,9 @@ function Table:CreateColumn(parent, text, width, format, last)
 	end]]
 
 	--frame:SetSize((self.frame:GetWidth() - x) * width, 24)
-	frame:SetSize(math.round(self.frame:GetWidth() * width), 24)
-	frame:SetMaxResize(math.round(frame:GetWidth() * 2), math.round(frame:GetHeight() * 2))
-	frame:SetMinResize(math.round(frame:GetWidth() / 1.4), math.round(frame:GetHeight() / 1.4))
+	frame:SetSize(round(self.frame:GetWidth() * width), 24)
+	frame:SetMaxResize(round(frame:GetWidth() * 2), round(frame:GetHeight() * 2))
+	frame:SetMinResize(round(frame:GetWidth() / 1.4), round(frame:GetHeight() / 1.4))
 
 	frame.text = frame:CreateFontString(nil, "Overlay")
 	if frame:GetID() == 1 then
@@ -335,7 +344,7 @@ function Table:CreateColumn(parent, text, width, format, last)
 				return
 			end
 
-			self:SetWidth(math.round(self:GetWidth()))
+			self:SetWidth(round(self:GetWidth()))
 
 			-- This should be recursive
 			--for i = #Table.frame.columns, self:GetID() + 1, -1 do
@@ -345,27 +354,27 @@ function Table:CreateColumn(parent, text, width, format, last)
 
 					if (Table.frame.columns[i - 1][1]:GetWidth() - diff) > (Table.frame:GetWidth() * Table.frame.columns[i - 1][3] / 1.4) then
 						Table.frame.columns[i - 1][1].noSizing = true
-						Table.frame.columns[i - 1][1]:SetWidth(math.round(Table.frame.columns[i - 1][1]:GetWidth() - diff))
+						Table.frame.columns[i - 1][1]:SetWidth(round(Table.frame.columns[i - 1][1]:GetWidth() - diff))
 						Table.frame.columns[i - 1][1].noSizing = nil
 					else
 						if (Table.frame.columns[i - 2][1]:GetWidth() - diff) > (Table.frame:GetWidth() * Table.frame.columns[i - 2][3] / 1.4) then
 							Table.frame.columns[i - 2][1].noSizing = true
-							Table.frame.columns[i - 2][1]:SetWidth(math.round(Table.frame.columns[i - 2][1]:GetWidth() - diff))
+							Table.frame.columns[i - 2][1]:SetWidth(round(Table.frame.columns[i - 2][1]:GetWidth() - diff))
 							Table.frame.columns[i - 2][1].noSizing = nil
 						else
 							if (Table.frame.columns[i - 3][1]:GetWidth() - diff) > (Table.frame:GetWidth() * Table.frame.columns[i - 3][3] / 1.4) then
 								Table.frame.columns[i - 3][1].noSizing = true
-								Table.frame.columns[i - 3][1]:SetWidth(math.round(Table.frame.columns[i - 3][1]:GetWidth() - diff))
+								Table.frame.columns[i - 3][1]:SetWidth(round(Table.frame.columns[i - 3][1]:GetWidth() - diff))
 								Table.frame.columns[i - 3][1].noSizing = nil
 							else
 								if (Table.frame.columns[i - 4][1]:GetWidth() - diff) > (Table.frame:GetWidth() * Table.frame.columns[i - 4][3] / 1.4) then
 									Table.frame.columns[i - 4][1].noSizing = true
-									Table.frame.columns[i - 4][1]:SetWidth(math.round(Table.frame.columns[i - 4][1]:GetWidth() - diff))
+									Table.frame.columns[i - 4][1]:SetWidth(round(Table.frame.columns[i - 4][1]:GetWidth() - diff))
 									Table.frame.columns[i - 4][1].noSizing = nil
 								else
 									if (Table.frame.columns[i - 5][1]:GetWidth() - diff) > (Table.frame:GetWidth() * Table.frame.columns[i - 5][3] / 1.4) then
 										Table.frame.columns[i - 5][1].noSizing = true
-										Table.frame.columns[i - 5][1]:SetWidth(math.round(Table.frame.columns[i - 5][1]:GetWidth() - diff))
+										Table.frame.columns[i - 5][1]:SetWidth(round(Table.frame.columns[i - 5][1]:GetWidth() - diff))
 										Table.frame.columns[i - 5][1].noSizing = nil
 									end
 								end
@@ -476,7 +485,7 @@ function Table:AddRow(...)
 	--[[self.frame.filtered[#self.frame.filtered + 1] = { }
 	for i = 1, (select("#", ...)) do
 		local text = (select(i, ...))
-		if i == 1 and string.find(text, self.frame.filter) then
+		if i == 1 and strfind(text, self.frame.filter) then
 			--self.frame.rows[#self.frame.rows][i] = { }
 			--self.frame.rows[#self.frame.rows][i].text = text
 			self.frame.filtered[#self.frame.filtered][i] = { }
@@ -569,7 +578,7 @@ function Table:ApplyFilter()
 	self.frame.filtered = { }
 
 	for i = 1, #self.frame.sorted do
-		if string.find(self.frame.sorted[i][1].text, self.frame.filter) then
+		if strfind(self.frame.sorted[i][1].text, self.frame.filter) then
 			self.frame.filtered[#self.frame.filtered + 1] = { }
 			for j = 1, #self.frame.sorted[i] do
 				self.frame.filtered[#self.frame.filtered][j] = self.frame.sorted[i][j]
@@ -706,9 +715,9 @@ function Table:UpdateItems()
 	else
 		for i = 1, #self.frame.columns do
 			if i == #self.frame.columns then
-				self.frame.columns[i][1]:SetSize(math.round(((self.frame:GetWidth() - x) * self.frame.columns[i][3])) + 2, 24)
+				self.frame.columns[i][1]:SetSize(round(((self.frame:GetWidth() - x) * self.frame.columns[i][3])) + 2, 24)
 			else
-				self.frame.columns[i][1]:SetSize(math.round(((self.frame:GetWidth() - x) * self.frame.columns[i][3])) + 1, 24)
+				self.frame.columns[i][1]:SetSize(round(((self.frame:GetWidth() - x) * self.frame.columns[i][3])) + 1, 24)
 			end
 			--self.frame.columns[i][1]:SetID(i)
 		end

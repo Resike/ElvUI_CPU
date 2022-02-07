@@ -1,12 +1,12 @@
-local AddonName, Addon = ...
+local _, Addon = ...
 
-local ElvUIDev = Addon.ElvUIDev
+local ElvUI_CPU = Addon.ElvUI_CPU
 
 local CreateFrame = CreateFrame
 local GameFontDisableSmall = GameFontDisableSmall
 local GameFontHighlightSmall = GameFontHighlightSmall
 
-local Button = ElvUIDev:RegisterWidget("Button")
+local Button = ElvUI_CPU:RegisterWidget("Button")
 
 function Button:Create(parent)
 	local frame = CreateFrame("Button", nil, parent)
@@ -28,7 +28,7 @@ function Button:Create(parent)
 	return frame
 end
 
-local ButtonSquare = ElvUIDev:RegisterWidget("ButtonSquare")
+local ButtonSquare = ElvUI_CPU:RegisterWidget("ButtonSquare")
 
 function ButtonSquare:Create(parent)
 	local frame = CreateFrame("Button", nil, parent)
