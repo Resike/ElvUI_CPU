@@ -1,4 +1,4 @@
-## Interface: 90105
+## Interface: 90200
 ## Title: |cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r
 ## Version: 0.1.4
 ## Author: Resike

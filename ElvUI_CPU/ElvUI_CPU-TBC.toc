@@ -1,4 +1,4 @@
-## Interface: 20503
+## Interface: 20504
 ## Title: |cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r
 ## Version: 0.1.4
 ## Author: Resike

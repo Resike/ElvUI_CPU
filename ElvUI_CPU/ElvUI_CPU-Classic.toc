@@ -1,4 +1,4 @@
-## Interface: 11401
+## Interface: 11403
 ## Title: |cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r
 ## Version: 0.1.4
 ## Author: Resike
