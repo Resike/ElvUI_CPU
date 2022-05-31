@@ -1,6 +1,6 @@
 ## Interface: 20504
 ## Title: |cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r
-## Version: 0.1.4
+## Version: 0.1.5
 ## Author: Resike
 ## DefaultState: Enabled
 ## Dependencies: ElvUI
