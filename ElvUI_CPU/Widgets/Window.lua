@@ -110,6 +110,9 @@ function Window:Create(name, parent)
 	end]]
 
 	frame.CloseButton:SetHitRectInsets(6, 6, 6, 6)
+	frame.CloseButton:SetScript("OnClick", function(self)
+		frame:Hide()
+	end)
 
 	frame:SetScript("OnMouseDown", function(self, button)
 		if button == "LeftButton" then
