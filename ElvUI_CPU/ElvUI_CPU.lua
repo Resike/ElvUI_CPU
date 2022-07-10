@@ -441,7 +441,7 @@ end
 function CPU:FunctionsOnUpdate(elapsed)
 	self.time = (self.time or 0) + elapsed
 
-	if self.time > 2 then
+	if self.time >= 1 then
 		CPU:UpdateFunctions()
 		self.time = 0
 	end
