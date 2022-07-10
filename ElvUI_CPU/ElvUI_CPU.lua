@@ -8,7 +8,7 @@ Addon.ElvUI_CPU = ElvUI_CPU
 
 local getmetatable, setmetatable = getmetatable, setmetatable
 local print, type, pairs, tonumber = print, type, pairs, tonumber
-local max, floor = max, floor
+local wipe, max, floor = wipe, max, floor
 
 local CreateFrame = CreateFrame
 local ResetCPUUsage = ResetCPUUsage
@@ -41,6 +41,8 @@ ElvUI_CPU.events:SetScript("OnEvent", function(self, event, ...)
 	ElvUI_CPU[event](ElvUI_CPU, ...)
 end)
 
+ElvUI_CPU.peakFuncsLast = { }
+ElvUI_CPU.peakFuncs = { }
 ElvUI_CPU.widgets = { }
 
 function ElvUI_CPU:Print(msg, ...)
@@ -190,11 +192,12 @@ function ElvUI_CPU:CreateOptions()
 	--self.frame.main.devtools.table:Hide()
 
 	self.frame.main.devtools.table:AddColumn("Function", 0.3)
-	self.frame.main.devtools.table:AddColumn("Calls", 0.125)
-	self.frame.main.devtools.table:AddColumn("Calls/sec", 0.125, "%.3f")
-	self.frame.main.devtools.table:AddColumn("Time/call", 0.15, "%.3f ms")
-	self.frame.main.devtools.table:AddColumn("Total time", 0.15, "%.3f ms")
-	self.frame.main.devtools.table:AddColumn("Overall usage", 0.15, "%.2f%%", true)
+	self.frame.main.devtools.table:AddColumn("Calls", 0.1)
+	self.frame.main.devtools.table:AddColumn("Calls/sec", 0.1, "%.3f")
+	self.frame.main.devtools.table:AddColumn("Time/call", 0.125, "%.3f ms")
+	self.frame.main.devtools.table:AddColumn("Total time", 0.125, "%.3f ms")
+	self.frame.main.devtools.table:AddColumn("Overall usage", 0.125, "%.2f%%")
+	self.frame.main.devtools.table:AddColumn("Peak time", 0.125, "%.3f ms", true)
 
 	self.frame.main.devtools.table:SetScript("OnShow", function(frame)
 		ElvUI_CPU:UpdateFunctions()
@@ -235,6 +238,8 @@ function ElvUI_CPU:CreateOptions()
 	self.frame.main.devtools.table.clear.texture:SetTexture("Interface\\Buttons\\UI-OptionsButton")
 	self.frame.main.devtools.table.clear:SetScript("OnClick", function(self, button)
 		ElvUI_CPU.allow_reset = true
+		wipe(ElvUI_CPU.peakFuncs)
+		wipe(ElvUI_CPU.peakFuncsLast)
 
 		ResetCPUUsage()
 		ElvUI_CPU.loadedtime = GetTime()
@@ -375,8 +380,8 @@ end
 function ElvUI_CPU:AddFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
-	usage, calls = max(0, usage), calls
-	self.frame.main.devtools.table:AddRow(key, calls, calls / self:GetLoadedTime(), (usage / max(1, calls)), usage, (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100)
+	usage = max(0, usage)
+	self.frame.main.devtools.table:AddRow(key, calls, calls / self:GetLoadedTime(), (usage / max(1, calls)), usage, (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100, self.peakFuncs[func] or 0)
 end
 
 function ElvUI_CPU:AddFunctions()
@@ -400,7 +405,19 @@ end
 function ElvUI_CPU:UpdateFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
-	usage, calls = max(0, usage), calls
+	usage = max(0, usage)
+
+	local peak = self.peakFuncs[func]
+	if peak then
+		local diff = usage - self.peakFuncsLast[func]
+		if diff > peak then
+			self.peakFuncs[func] = diff
+		end
+	elseif usage > 0 then
+		self.peakFuncs[func] = usage
+	end
+
+	self.peakFuncsLast[func] = usage
 
 	local callspersec = calls / self:GetLoadedTime()
 	local timepercall = usage / max(1, calls)
@@ -410,7 +427,7 @@ function ElvUI_CPU:UpdateFunction(key, func)
 		return
 	end
 
-	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage)
+	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage, peak or 0)
 end
 
 function ElvUI_CPU:FunctionsOnUpdate(elapsed)
