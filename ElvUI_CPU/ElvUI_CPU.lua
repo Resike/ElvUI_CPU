@@ -117,6 +117,8 @@ function ElvUI_CPU:ADDON_LOADED(addon)
 end
 
 function ElvUI_CPU:CreateOptions()
+	ElvUI_CPU.timer = CreateFrame('Frame', 'ElvUI_CPUTimer', UIParent)
+
 	self.frame = self:CreateWidget("Window", "ElvUI_CPUOptions", UIParent)
 	self.frame:SetFrameStrata("High")
 	self.frame:SetSize(800, 600)
@@ -214,11 +216,18 @@ function ElvUI_CPU:CreateOptions()
 		if self:GetChecked() then
 			self:GetParent():SetScript("OnUpdate", ElvUI_CPU.FunctionsOnUpdate)
 
+			ElvUI_CPU.timer:SetScript("OnUpdate", ElvUI_CPU.TimesOnUpdate)
+
 			self.texture:SetSize(9, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Stop")
 			self.texture:SetTexCoord(0.1875, 0.75, 0.0625, 0.875)
 		else
 			self:GetParent():SetScript("OnUpdate", nil)
+
+			ElvUI_CPU.timer:SetScript("OnUpdate", nil)
+
+			wipe(ElvUI_CPU.peakFuncs)
+			wipe(ElvUI_CPU.peakFuncsLast)
 
 			self.texture:SetSize(7, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
@@ -402,7 +411,7 @@ function ElvUI_CPU:AddFunctions()
 	self.frame.main.devtools.table:ApplyFilter()
 end
 
-function ElvUI_CPU:UpdateFunction(key, func)
+function ElvUI_CPU:UpdateFunction(key, func, skip)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
 	usage = max(0, usage)
@@ -421,6 +430,8 @@ function ElvUI_CPU:UpdateFunction(key, func)
 		self.peakFuncsLast[func] = usage
 	end
 
+	if skip then return end
+
 	local callspersec = calls / self:GetLoadedTime()
 	local timepercall = usage / max(1, calls)
 	local overallusage = (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100
@@ -432,17 +443,25 @@ function ElvUI_CPU:UpdateFunction(key, func)
 	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage, peak)
 end
 
-function ElvUI_CPU:FunctionsOnUpdate(elapsed)
-	self.time = (self.time or 0) + elapsed
-	if self.time < 1 then
-		return
+function ElvUI_CPU:TimesOnUpdate(elapsed)
+	self.last = (self.last or 0) + elapsed
+	if self.last > 0.1 then
+		ElvUI_CPU:UpdateTimes(true)
+		self.last = 0
 	end
-	self.time = 0
-
-	ElvUI_CPU:UpdateFunctions()
 end
 
-function ElvUI_CPU:UpdateFunctions()
+function ElvUI_CPU:FunctionsOnUpdate(elapsed)
+	self.time = (self.time or 0) + elapsed
+	if self.time > 1 then
+		ElvUI_CPU:UpdateFunctions()
+		self.time = 0
+
+		self.last = 0 -- try to keep them from happening around same time
+	end
+end
+
+function ElvUI_CPU:UpdateTimes(skip)
 	UpdateAddOnCPUUsage("ElvUI")
 	if (self.plugins) then
 		for plugin, _ in pairs(self.plugins) do
@@ -452,14 +471,14 @@ function ElvUI_CPU:UpdateFunctions()
 
 	for key, func in pairs(ElvUI) do
 		if type(func) == "function" then
-			self:UpdateFunction("ElvUI:"..key, func)
+			self:UpdateFunction("ElvUI:"..key, func, skip)
 		end
 	end
 
 	for module, tbl in pairs(ElvUI.modules) do
 		for key, func in pairs(tbl) do
 			if type(func) == "function" then
-				self:UpdateFunction(module..":"..key, func)
+				self:UpdateFunction(module..":"..key, func, skip)
 			end
 		end
 	end
@@ -469,12 +488,16 @@ function ElvUI_CPU:UpdateFunctions()
 			for moduleName,module in pairs(modules) do
 				for key, func in pairs(module) do
 					if type(func) == "function" then
-						self:UpdateFunction(("(Z)%s %s: %s"):format(plugin:gsub("ElvUI_",""):sub(1,1), moduleName, key), func);
+						self:UpdateFunction(("(Z)%s %s: %s"):format(plugin:gsub("ElvUI_",""):sub(1,1), moduleName, key), func, skip);
 					end
 				end
 			end
 		end
 	end
+end
+
+function ElvUI_CPU:UpdateFunctions()
+	ElvUI_CPU:UpdateTimes()
 
 	self.frame.main.devtools.table:Update()
 
