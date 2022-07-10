@@ -8,7 +8,7 @@ Addon.ElvUI_CPU = CPU
 
 local getmetatable, setmetatable = getmetatable, setmetatable
 local print, type, pairs, tonumber = print, type, pairs, tonumber
-local wipe, max, floor = wipe, max, floor
+local time, difftime, wipe, max, floor = time, difftime, wipe, max, floor
 
 local CreateFrame = CreateFrame
 local ResetCPUUsage = ResetCPUUsage
@@ -41,8 +41,7 @@ CPU.events:SetScript("OnEvent", function(self, event, ...)
 	CPU[event](CPU, ...)
 end)
 
-CPU.peakFuncsLast = { }
-CPU.peakFuncs = { }
+CPU.peaks = {}
 CPU.widgets = { }
 
 function CPU:Print(msg, ...)
@@ -117,8 +116,6 @@ function CPU:ADDON_LOADED(addon)
 end
 
 function CPU:CreateOptions()
-	CPU.timer = CreateFrame('Frame', 'ElvUI_CPUTimer', UIParent)
-
 	self.frame = self:CreateWidget("Window", "ElvUI_CPUOptions", UIParent)
 	self.frame:SetFrameStrata("High")
 	self.frame:SetSize(800, 600)
@@ -213,21 +210,14 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table.toggle.texture:SetTexCoord(0.3125, 0.75, 0.0625, 0.875)
 
 	self.frame.main.devtools.table.toggle:SetScript("OnClick", function(self, button)
-		wipe(CPU.peakFuncs)
-		wipe(CPU.peakFuncsLast)
-
 		if self:GetChecked() then
 			self:GetParent():SetScript("OnUpdate", CPU.FunctionsOnUpdate)
-
-			CPU.timer:SetScript("OnUpdate", CPU.TimesOnUpdate)
 
 			self.texture:SetSize(9, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Stop")
 			self.texture:SetTexCoord(0.1875, 0.75, 0.0625, 0.875)
 		else
 			self:GetParent():SetScript("OnUpdate", nil)
-
-			CPU.timer:SetScript("OnUpdate", nil)
 
 			self.texture:SetSize(7, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
@@ -239,9 +229,6 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table.refresh:SetPoint("TopLeft", self.frame.main.devtools.table.toggle, "TopRight", 0, 0)
 	self.frame.main.devtools.table.refresh.texture:SetTexture("Interface\\Buttons\\UI-RefreshButton")
 	self.frame.main.devtools.table.refresh:SetScript("OnClick", function(self, button)
-		wipe(CPU.peakFuncs)
-		wipe(CPU.peakFuncsLast)
-
 		CPU:UpdateFunctions()
 	end)
 
@@ -249,8 +236,7 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table.clear:SetPoint("TopLeft", self.frame.main.devtools.table.refresh, "TopRight", 0, 0)
 	self.frame.main.devtools.table.clear.texture:SetTexture("Interface\\Buttons\\UI-OptionsButton")
 	self.frame.main.devtools.table.clear:SetScript("OnClick", function(self, button)
-		wipe(CPU.peakFuncs)
-		wipe(CPU.peakFuncsLast)
+		wipe(CPU.peaks)
 
 		CPU.allow_reset = true
 
@@ -394,7 +380,7 @@ function CPU:AddFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
 	usage = max(0, usage)
-	self.frame.main.devtools.table:AddRow(key, calls, calls / self:GetLoadedTime(), (usage / max(1, calls)), usage, (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100, self.peakFuncs[func] or 0)
+	self.frame.main.devtools.table:AddRow(key, calls, calls / self:GetLoadedTime(), (usage / max(1, calls)), usage, (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100, (self.peaks[func] and self.peaks[func].ms) or 0)
 end
 
 function CPU:AddFunctions()
@@ -420,18 +406,23 @@ function CPU:UpdateFunction(key, func, skip)
 	local usage, calls = GetFunctionCPUUsage(func, subs)
 	usage = max(0, usage)
 
-	local peak = self.peakFuncs[func] or 0
+	local peaks = self.peaks[func]
+	if not peaks then
+		self.peaks[func] = { ms = 0 }
+		peaks = self.peaks[func]
+	end
+
 	if self.frame.main.devtools.table.loaded then
-		local last = self.peakFuncsLast[func]
-		if last then
-			local diff = usage - last
-			if diff > peak then
-				self.peakFuncs[func] = diff
-				peak = diff
+		local now = time()
+		if peaks.last then
+			local diff = (usage - peaks.last) - difftime(now, peaks.time)
+			if diff > peaks.ms then
+				peaks.ms = diff
 			end
 		end
 
-		self.peakFuncsLast[func] = usage
+		peaks.last = usage
+		peaks.time = now
 	end
 
 	if skip then return end
@@ -444,28 +435,19 @@ function CPU:UpdateFunction(key, func, skip)
 		return
 	end
 
-	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage, peak)
-end
-
-function CPU:TimesOnUpdate(elapsed)
-	self.last = (self.last or 0) + elapsed
-	if self.last > 0.1 then
-		CPU:UpdateTimes(true)
-		self.last = 0
-	end
+	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage, peaks.ms)
 end
 
 function CPU:FunctionsOnUpdate(elapsed)
 	self.time = (self.time or 0) + elapsed
-	if self.time > 1 then
+
+	if self.time > 2 then
 		CPU:UpdateFunctions()
 		self.time = 0
-
-		self.last = 0 -- try to keep them from happening around same time
 	end
 end
 
-function CPU:UpdateTimes(skip)
+function CPU:UpdateTimes()
 	UpdateAddOnCPUUsage("ElvUI")
 	if (self.plugins) then
 		for plugin, _ in pairs(self.plugins) do
@@ -475,14 +457,14 @@ function CPU:UpdateTimes(skip)
 
 	for key, func in pairs(ElvUI) do
 		if type(func) == "function" then
-			self:UpdateFunction("ElvUI:"..key, func, skip)
+			self:UpdateFunction("ElvUI:"..key, func)
 		end
 	end
 
 	for module, tbl in pairs(ElvUI.modules) do
 		for key, func in pairs(tbl) do
 			if type(func) == "function" then
-				self:UpdateFunction(module..":"..key, func, skip)
+				self:UpdateFunction(module..":"..key, func)
 			end
 		end
 	end
@@ -492,7 +474,7 @@ function CPU:UpdateTimes(skip)
 			for moduleName,module in pairs(modules) do
 				for key, func in pairs(module) do
 					if type(func) == "function" then
-						self:UpdateFunction(("(Z)%s %s: %s"):format(plugin:gsub("ElvUI_",""):sub(1,1), moduleName, key), func, skip);
+						self:UpdateFunction(("(Z)%s %s: %s"):format(plugin:gsub("ElvUI_",""):sub(1,1), moduleName, key), func);
 					end
 				end
 			end
