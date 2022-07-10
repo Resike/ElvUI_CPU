@@ -412,18 +412,17 @@ function CPU:UpdateFunction(key, func)
 		peaks = self.peaks[func]
 	end
 
-	if self.frame.main.devtools.table.loaded then
-		local now = GetTime()
-		if peaks.last then
-			local diff = (usage - peaks.last) - (now - peaks.time)
-			if diff > peaks.ms then
-				peaks.ms = diff
-			end
+	local now = GetTime()
+	if peaks.last then
+		local since = now - peaks.past
+		local diff = (usage - peaks.last) - since
+		if diff > peaks.ms then
+			peaks.ms = diff
 		end
-
-		peaks.last = usage
-		peaks.time = now
 	end
+
+	peaks.last = usage
+	peaks.past = now
 
 	local callspersec = calls / self:GetLoadedTime()
 	local timepercall = usage / max(1, calls)
