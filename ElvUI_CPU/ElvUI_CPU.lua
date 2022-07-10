@@ -8,7 +8,7 @@ Addon.ElvUI_CPU = CPU
 
 local getmetatable, setmetatable = getmetatable, setmetatable
 local print, type, pairs, tonumber = print, type, pairs, tonumber
-local time, difftime, wipe, max, floor = time, difftime, wipe, max, floor
+local wipe, max, floor = wipe, max, floor
 
 local CreateFrame = CreateFrame
 local ResetCPUUsage = ResetCPUUsage
@@ -401,7 +401,7 @@ function CPU:AddFunctions()
 	self.frame.main.devtools.table:ApplyFilter()
 end
 
-function CPU:UpdateFunction(key, func, skip)
+function CPU:UpdateFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
 	usage = max(0, usage)
@@ -413,9 +413,9 @@ function CPU:UpdateFunction(key, func, skip)
 	end
 
 	if self.frame.main.devtools.table.loaded then
-		local now = time()
+		local now = GetTime()
 		if peaks.last then
-			local diff = (usage - peaks.last) - difftime(now, peaks.time)
+			local diff = (usage - peaks.last) - (now - peaks.time)
 			if diff > peaks.ms then
 				peaks.ms = diff
 			end
@@ -424,8 +424,6 @@ function CPU:UpdateFunction(key, func, skip)
 		peaks.last = usage
 		peaks.time = now
 	end
-
-	if skip then return end
 
 	local callspersec = calls / self:GetLoadedTime()
 	local timepercall = usage / max(1, calls)
