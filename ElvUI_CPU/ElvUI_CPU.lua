@@ -213,6 +213,9 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table.toggle.texture:SetTexCoord(0.3125, 0.75, 0.0625, 0.875)
 
 	self.frame.main.devtools.table.toggle:SetScript("OnClick", function(self, button)
+		wipe(CPU.peakFuncs)
+		wipe(CPU.peakFuncsLast)
+
 		if self:GetChecked() then
 			self:GetParent():SetScript("OnUpdate", CPU.FunctionsOnUpdate)
 
@@ -226,9 +229,6 @@ function CPU:CreateOptions()
 
 			CPU.timer:SetScript("OnUpdate", nil)
 
-			wipe(CPU.peakFuncs)
-			wipe(CPU.peakFuncsLast)
-
 			self.texture:SetSize(7, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
 			self.texture:SetTexCoord(0.3125, 0.75, 0.0625, 0.875)
@@ -239,6 +239,9 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table.refresh:SetPoint("TopLeft", self.frame.main.devtools.table.toggle, "TopRight", 0, 0)
 	self.frame.main.devtools.table.refresh.texture:SetTexture("Interface\\Buttons\\UI-RefreshButton")
 	self.frame.main.devtools.table.refresh:SetScript("OnClick", function(self, button)
+		wipe(CPU.peakFuncs)
+		wipe(CPU.peakFuncsLast)
+
 		CPU:UpdateFunctions()
 	end)
 
@@ -246,9 +249,10 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table.clear:SetPoint("TopLeft", self.frame.main.devtools.table.refresh, "TopRight", 0, 0)
 	self.frame.main.devtools.table.clear.texture:SetTexture("Interface\\Buttons\\UI-OptionsButton")
 	self.frame.main.devtools.table.clear:SetScript("OnClick", function(self, button)
-		CPU.allow_reset = true
 		wipe(CPU.peakFuncs)
 		wipe(CPU.peakFuncsLast)
+
+		CPU.allow_reset = true
 
 		ResetCPUUsage()
 		CPU.loadedtime = GetTime()
