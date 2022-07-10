@@ -211,13 +211,13 @@ function CPU:CreateOptions()
 
 	self.frame.main.devtools.table.toggle:SetScript("OnClick", function(self, button)
 		if self:GetChecked() then
-			self:GetParent():SetScript("OnUpdate", CPU.FunctionsOnUpdate)
+			CPU.timer:SetScript("OnUpdate", CPU.FunctionsOnUpdate)
 
 			self.texture:SetSize(9, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Stop")
 			self.texture:SetTexCoord(0.1875, 0.75, 0.0625, 0.875)
 		else
-			self:GetParent():SetScript("OnUpdate", nil)
+			CPU.timer:SetScript("OnUpdate", nil)
 
 			self.texture:SetSize(7, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
@@ -229,7 +229,12 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table.refresh:SetPoint("TopLeft", self.frame.main.devtools.table.toggle, "TopRight", 0, 0)
 	self.frame.main.devtools.table.refresh.texture:SetTexture("Interface\\Buttons\\UI-RefreshButton")
 	self.frame.main.devtools.table.refresh:SetScript("OnClick", function(self, button)
+		local silent = CPU.update_silent
+		CPU.update_silent = nil
+
 		CPU:UpdateFunctions()
+
+		CPU.update_silent = silent
 	end)
 
 	self.frame.main.devtools.table.clear = self:CreateWidget("ButtonSquare", self.frame.main.devtools.table)
@@ -238,6 +243,8 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table.clear:SetScript("OnClick", function(self, button)
 		wipe(CPU.peaks)
 
+		local silent = CPU.update_silent
+		CPU.update_silent = nil
 		CPU.allow_reset = true
 
 		ResetCPUUsage()
@@ -245,11 +252,35 @@ function CPU:CreateOptions()
 		CPU:UpdateFunctions()
 
 		CPU.allow_reset = nil
+		CPU.update_silent = silent
+	end)
+
+	self.frame.main.devtools.table.silent = self:CreateWidget("CheckButtonSquare", self.frame.main.devtools.table)
+	self.frame.main.devtools.table.silent:SetPoint("TopLeft", self.frame.main.devtools.table.clear, "TopRight", 0, 0)
+
+	self.frame.main.devtools.table.silent.texture:SetSize(7, 13)
+	self.frame.main.devtools.table.silent.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
+	self.frame.main.devtools.table.silent.texture:SetTexCoord(0.3125, 0.75, 0.0625, 0.875)
+
+	self.frame.main.devtools.table.silent:SetScript("OnClick", function(self, button)
+		if self:GetChecked() then
+			CPU.update_silent = true
+
+			self.texture:SetSize(9, 13)
+			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Stop")
+			self.texture:SetTexCoord(0.1875, 0.75, 0.0625, 0.875)
+		else
+			CPU.update_silent = nil
+
+			self.texture:SetSize(7, 13)
+			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
+			self.texture:SetTexCoord(0.3125, 0.75, 0.0625, 0.875)
+		end
 	end)
 
 	self.frame.main.devtools.table.edit = self:CreateWidget("EditBox", self.frame.main.devtools.table)
 	self.frame.main.devtools.table.edit:SetSize(300, 26)
-	self.frame.main.devtools.table.edit:SetPoint("Left", self.frame.main.devtools.table.clear, "Right", 3, 0)
+	self.frame.main.devtools.table.edit:SetPoint("Left", self.frame.main.devtools.table.silent, "Right", 3, 0)
 
 	self.frame.main.devtools.table.edit.clear = CreateFrame("Button", nil, self.frame.main.devtools.table.edit)
 	self.frame.main.devtools.table.edit.clear:SetSize(12, 12)
@@ -423,6 +454,8 @@ function CPU:UpdateFunction(key, func)
 	peaks.last = usage
 	peaks.past = calls
 
+	if CPU.update_silent then return end
+
 	local callspersec = calls / self:GetLoadedTime()
 	local timepercall = usage / max(1, calls)
 	local overallusage = (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100
@@ -434,10 +467,11 @@ function CPU:UpdateFunction(key, func)
 	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, peaks.ms, overallusage)
 end
 
+CPU.timer = CreateFrame('Frame')
 function CPU:FunctionsOnUpdate(elapsed)
 	self.time = (self.time or 0) + elapsed
 
-	if self.time >= 1 then
+	if (CPU.update_silent or CPU.frame:IsShown()) and self.time >= 1 then
 		CPU:UpdateFunctions()
 		self.time = 0
 	end
