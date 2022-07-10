@@ -407,17 +407,19 @@ function ElvUI_CPU:UpdateFunction(key, func)
 	local usage, calls = GetFunctionCPUUsage(func, subs)
 	usage = max(0, usage)
 
-	local peak = self.peakFuncs[func]
-	if peak then
-		local diff = usage - self.peakFuncsLast[func]
-		if diff > peak then
-			self.peakFuncs[func] = diff
+	local peak = self.peakFuncs[func] or 0
+	if self.frame.main.devtools.table.loaded then
+		local last = self.peakFuncsLast[func]
+		if last then
+			local diff = usage - last
+			if diff > peak then
+				self.peakFuncs[func] = diff
+				peak = diff
+			end
 		end
-	elseif usage > 0 then
-		self.peakFuncs[func] = usage
-	end
 
-	self.peakFuncsLast[func] = usage
+		self.peakFuncsLast[func] = usage
+	end
 
 	local callspersec = calls / self:GetLoadedTime()
 	local timepercall = usage / max(1, calls)
@@ -427,7 +429,7 @@ function ElvUI_CPU:UpdateFunction(key, func)
 		return
 	end
 
-	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage, peak or 0)
+	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage, peak)
 end
 
 function ElvUI_CPU:FunctionsOnUpdate(elapsed)
