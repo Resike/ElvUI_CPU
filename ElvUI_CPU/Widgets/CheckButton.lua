@@ -1,6 +1,6 @@
 local _, Addon = ...
 
-local ElvUI_CPU = Addon.ElvUI_CPU
+local CPU = Addon.ElvUI_CPU
 
 --local hooksecurefunc = hooksecurefunc
 
@@ -10,7 +10,7 @@ local GameFontNomal = GameFontNomal
 local GameFontHighlight = GameFontHighlight
 local GameFontDisable = GameFontDisable
 
-local CheckButton = ElvUI_CPU:RegisterWidget("CheckButton")
+local CheckButton = CPU:RegisterWidget("CheckButton")
 
 function CheckButton:Create(parent)
 	local frame = CreateFrame("CheckButton", nil, parent)
@@ -47,7 +47,7 @@ function CheckButton:Create(parent)
 	return frame
 end
 
-local CheckButtonIcon = ElvUI_CPU:RegisterWidget("CheckButtonIcon")
+local CheckButtonIcon = CPU:RegisterWidget("CheckButtonIcon")
 
 function CheckButtonIcon:Create(parent)
 	local frame = CreateFrame("CheckButton", nil, parent)
@@ -84,7 +84,7 @@ function CheckButtonIcon:Create(parent)
 	return frame
 end
 
-local CheckButtonSquare = ElvUI_CPU:RegisterWidget("CheckButtonSquare")
+local CheckButtonSquare = CPU:RegisterWidget("CheckButtonSquare")
 
 function CheckButtonSquare:Create(parent)
 	local frame = CreateFrame("CheckButton", nil, parent)

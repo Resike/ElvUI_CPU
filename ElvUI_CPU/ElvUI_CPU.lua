@@ -3,8 +3,8 @@ local AddonName, Addon = ...
 local ElvUI = LibStub("AceAddon-3.0"):GetAddon("ElvUI")
 Addon.ElvUI = ElvUI
 
-local ElvUI_CPU = { }
-Addon.ElvUI_CPU = ElvUI_CPU
+local CPU = { }
+Addon.ElvUI_CPU = CPU
 
 local getmetatable, setmetatable = getmetatable, setmetatable
 local print, type, pairs, tonumber = print, type, pairs, tonumber
@@ -24,7 +24,7 @@ local UIParent = UIParent
 local GameFontHighlightSmall = GameFontHighlightSmall
 local GameFontNormal = GameFontNormal
 
-_G.ElvUI_CPU = ElvUI_CPU
+_G.ElvUI_CPU = CPU
 
 local round = function(num, decimals)
 	local mult = 10^(decimals or 0)
@@ -34,25 +34,25 @@ end
 
 math.round = round
 
-ElvUI_CPU.events = CreateFrame("Frame")
-ElvUI_CPU.events:RegisterEvent("ADDON_LOADED")
+CPU.events = CreateFrame("Frame")
+CPU.events:RegisterEvent("ADDON_LOADED")
 
-ElvUI_CPU.events:SetScript("OnEvent", function(self, event, ...)
-	ElvUI_CPU[event](ElvUI_CPU, ...)
+CPU.events:SetScript("OnEvent", function(self, event, ...)
+	CPU[event](CPU, ...)
 end)
 
-ElvUI_CPU.peakFuncsLast = { }
-ElvUI_CPU.peakFuncs = { }
-ElvUI_CPU.widgets = { }
+CPU.peakFuncsLast = { }
+CPU.peakFuncs = { }
+CPU.widgets = { }
 
-function ElvUI_CPU:Print(msg, ...)
+function CPU:Print(msg, ...)
 	print("|cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r: "..msg, ...)
 end
 
 -- Widgets
-function ElvUI_CPU:RegisterWidget(name)
+function CPU:RegisterWidget(name)
 	if self.widgets[name] then
-		ElvUI_CPU:Print("Widget is already registered with this name:", name)
+		CPU:Print("Widget is already registered with this name:", name)
 	end
 
 	local class = { }
@@ -63,11 +63,11 @@ function ElvUI_CPU:RegisterWidget(name)
 	return class
 end
 
-function ElvUI_CPU:CreateWidget(name, ...)
+function CPU:CreateWidget(name, ...)
 	local class = self.widgets[name]
 
 	if not class then
-		ElvUI_CPU:Print("Widget is not registered:", name)
+		CPU:Print("Widget is not registered:", name)
 
 		return
 	end
@@ -87,21 +87,21 @@ function ElvUI_CPU:CreateWidget(name, ...)
 	return frame
 end
 
-function ElvUI_CPU:GetWidget(name)
+function CPU:GetWidget(name)
 	return self.widgets[name]
 end
 
-function ElvUI_CPU:HasWidget(name)
+function CPU:HasWidget(name)
 	return not not self.widgets[name]
 end
 
-function ElvUI_CPU:GetLoadedTime()
+function CPU:GetLoadedTime()
 	return floor(GetTime() - ElvUI.loadedtime or self.loadedtime)
 end
 
-function ElvUI_CPU:ADDON_LOADED(addon)
+function CPU:ADDON_LOADED(addon)
 	if addon == AddonName then
-		ElvUI_CPU.loadedtime = GetTime()
+		CPU.loadedtime = GetTime()
 
 		self:CreateOptions()
 
@@ -112,12 +112,12 @@ function ElvUI_CPU:ADDON_LOADED(addon)
 			self.frame.main.devtools.table.loaded = true
 		end
 
-		ElvUI_CPU:Print("Addon loaded into the memory.")
+		CPU:Print("Addon loaded into the memory.")
 	end
 end
 
-function ElvUI_CPU:CreateOptions()
-	ElvUI_CPU.timer = CreateFrame('Frame', 'ElvUI_CPUTimer', UIParent)
+function CPU:CreateOptions()
+	CPU.timer = CreateFrame('Frame', 'ElvUI_CPUTimer', UIParent)
 
 	self.frame = self:CreateWidget("Window", "ElvUI_CPUOptions", UIParent)
 	self.frame:SetFrameStrata("High")
@@ -202,7 +202,7 @@ function ElvUI_CPU:CreateOptions()
 	self.frame.main.devtools.table:AddColumn("Peak time", 0.125, "%.3f ms", true)
 
 	self.frame.main.devtools.table:SetScript("OnShow", function(frame)
-		ElvUI_CPU:UpdateFunctions()
+		CPU:UpdateFunctions()
 	end)
 
 	self.frame.main.devtools.table.toggle = self:CreateWidget("CheckButtonSquare", self.frame.main.devtools.table)
@@ -214,9 +214,9 @@ function ElvUI_CPU:CreateOptions()
 
 	self.frame.main.devtools.table.toggle:SetScript("OnClick", function(self, button)
 		if self:GetChecked() then
-			self:GetParent():SetScript("OnUpdate", ElvUI_CPU.FunctionsOnUpdate)
+			self:GetParent():SetScript("OnUpdate", CPU.FunctionsOnUpdate)
 
-			ElvUI_CPU.timer:SetScript("OnUpdate", ElvUI_CPU.TimesOnUpdate)
+			CPU.timer:SetScript("OnUpdate", CPU.TimesOnUpdate)
 
 			self.texture:SetSize(9, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Stop")
@@ -224,10 +224,10 @@ function ElvUI_CPU:CreateOptions()
 		else
 			self:GetParent():SetScript("OnUpdate", nil)
 
-			ElvUI_CPU.timer:SetScript("OnUpdate", nil)
+			CPU.timer:SetScript("OnUpdate", nil)
 
-			wipe(ElvUI_CPU.peakFuncs)
-			wipe(ElvUI_CPU.peakFuncsLast)
+			wipe(CPU.peakFuncs)
+			wipe(CPU.peakFuncsLast)
 
 			self.texture:SetSize(7, 13)
 			self.texture:SetTexture("Interface\\AddOns\\ElvUI_CPU\\Textures\\Play")
@@ -239,22 +239,22 @@ function ElvUI_CPU:CreateOptions()
 	self.frame.main.devtools.table.refresh:SetPoint("TopLeft", self.frame.main.devtools.table.toggle, "TopRight", 0, 0)
 	self.frame.main.devtools.table.refresh.texture:SetTexture("Interface\\Buttons\\UI-RefreshButton")
 	self.frame.main.devtools.table.refresh:SetScript("OnClick", function(self, button)
-		ElvUI_CPU:UpdateFunctions()
+		CPU:UpdateFunctions()
 	end)
 
 	self.frame.main.devtools.table.clear = self:CreateWidget("ButtonSquare", self.frame.main.devtools.table)
 	self.frame.main.devtools.table.clear:SetPoint("TopLeft", self.frame.main.devtools.table.refresh, "TopRight", 0, 0)
 	self.frame.main.devtools.table.clear.texture:SetTexture("Interface\\Buttons\\UI-OptionsButton")
 	self.frame.main.devtools.table.clear:SetScript("OnClick", function(self, button)
-		ElvUI_CPU.allow_reset = true
-		wipe(ElvUI_CPU.peakFuncs)
-		wipe(ElvUI_CPU.peakFuncsLast)
+		CPU.allow_reset = true
+		wipe(CPU.peakFuncs)
+		wipe(CPU.peakFuncsLast)
 
 		ResetCPUUsage()
-		ElvUI_CPU.loadedtime = GetTime()
-		ElvUI_CPU:UpdateFunctions()
+		CPU.loadedtime = GetTime()
+		CPU:UpdateFunctions()
 
-		ElvUI_CPU.allow_reset = nil
+		CPU.allow_reset = nil
 	end)
 
 	self.frame.main.devtools.table.edit = self:CreateWidget("EditBox", self.frame.main.devtools.table)
@@ -314,8 +314,8 @@ function ElvUI_CPU:CreateOptions()
 
 		self:SetSize(12, 12)
 
-		ElvUI_CPU.frame.main.devtools.table.edit:SetText("")
-		ElvUI_CPU.frame.main.devtools.table.edit:ClearFocus()
+		CPU.frame.main.devtools.table.edit:SetText("")
+		CPU.frame.main.devtools.table.edit:ClearFocus()
 	end)
 
 	self.frame.main.devtools.table.edit.clear.texture = self.frame.main.devtools.table.edit.clear:CreateTexture(nil, "Overlay")
@@ -340,12 +340,12 @@ function ElvUI_CPU:CreateOptions()
 			self.clear:Show()
 		end
 
-		ElvUI_CPU.frame.main.devtools.table:SetFilter(text)
+		CPU.frame.main.devtools.table:SetFilter(text)
 
 		if text == "" then
-			ElvUI_CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUI_CPU.frame.main.devtools.table.sorted, ElvUI_CPU:GetTotal(5))
+			CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #CPU.frame.main.devtools.table.sorted, CPU:GetTotal(5))
 		else
-			ElvUI_CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUI_CPU.frame.main.devtools.table.filtered, ElvUI_CPU:GetFiltered(5))
+			CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #CPU.frame.main.devtools.table.filtered, CPU:GetFiltered(5))
 		end
 	end)
 
@@ -358,7 +358,7 @@ function ElvUI_CPU:CreateOptions()
 	PlaySound(841)
 end
 
-function ElvUI_CPU:ToggleFrame()
+function CPU:ToggleFrame()
 	if not self.frame:IsShown() then
 		self.frame:Show()
 	else
@@ -366,14 +366,14 @@ function ElvUI_CPU:ToggleFrame()
 	end
 end
 
-function ElvUI_CPU:RegisterPlugin(pluginName)
+function CPU:RegisterPlugin(pluginName)
 	if (not self.plugins) then
 		self.plugins = {};
 	end
 	self.plugins[pluginName] = true;
 end
 
-function ElvUI_CPU:RegisterPluginModule(pluginName, moduleName, module)
+function CPU:RegisterPluginModule(pluginName, moduleName, module)
 	if (not self.pluginModules) then
 		self.pluginModules = {};
 	end
@@ -386,14 +386,14 @@ function ElvUI_CPU:RegisterPluginModule(pluginName, moduleName, module)
 	end
 end
 
-function ElvUI_CPU:AddFunction(key, func)
+function CPU:AddFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
 	usage = max(0, usage)
 	self.frame.main.devtools.table:AddRow(key, calls, calls / self:GetLoadedTime(), (usage / max(1, calls)), usage, (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100, self.peakFuncs[func] or 0)
 end
 
-function ElvUI_CPU:AddFunctions()
+function CPU:AddFunctions()
 	for key, func in pairs(ElvUI) do
 		if type(func) == "function" then
 			self:AddFunction("ElvUI:"..key, func)
@@ -411,7 +411,7 @@ function ElvUI_CPU:AddFunctions()
 	self.frame.main.devtools.table:ApplyFilter()
 end
 
-function ElvUI_CPU:UpdateFunction(key, func, skip)
+function CPU:UpdateFunction(key, func, skip)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
 	usage = max(0, usage)
@@ -436,32 +436,32 @@ function ElvUI_CPU:UpdateFunction(key, func, skip)
 	local timepercall = usage / max(1, calls)
 	local overallusage = (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100
 
-	if not ElvUI_CPU.allow_reset and (calls == 0 and callspersec == 0 and timepercall == 0 and usage == 0 and overallusage == 0) then
+	if not CPU.allow_reset and (calls == 0 and callspersec == 0 and timepercall == 0 and usage == 0 and overallusage == 0) then
 		return
 	end
 
 	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, overallusage, peak)
 end
 
-function ElvUI_CPU:TimesOnUpdate(elapsed)
+function CPU:TimesOnUpdate(elapsed)
 	self.last = (self.last or 0) + elapsed
 	if self.last > 0.1 then
-		ElvUI_CPU:UpdateTimes(true)
+		CPU:UpdateTimes(true)
 		self.last = 0
 	end
 end
 
-function ElvUI_CPU:FunctionsOnUpdate(elapsed)
+function CPU:FunctionsOnUpdate(elapsed)
 	self.time = (self.time or 0) + elapsed
 	if self.time > 1 then
-		ElvUI_CPU:UpdateFunctions()
+		CPU:UpdateFunctions()
 		self.time = 0
 
 		self.last = 0 -- try to keep them from happening around same time
 	end
 end
 
-function ElvUI_CPU:UpdateTimes(skip)
+function CPU:UpdateTimes(skip)
 	UpdateAddOnCPUUsage("ElvUI")
 	if (self.plugins) then
 		for plugin, _ in pairs(self.plugins) do
@@ -496,19 +496,19 @@ function ElvUI_CPU:UpdateTimes(skip)
 	end
 end
 
-function ElvUI_CPU:UpdateFunctions()
-	ElvUI_CPU:UpdateTimes()
+function CPU:UpdateFunctions()
+	CPU:UpdateTimes()
 
 	self.frame.main.devtools.table:Update()
 
-	if ElvUI_CPU.frame.main.devtools.table.edit:GetText() == "" then
-		ElvUI_CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUI_CPU.frame.main.devtools.table.sorted, ElvUI_CPU:GetTotal(5))
+	if CPU.frame.main.devtools.table.edit:GetText() == "" then
+		CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #CPU.frame.main.devtools.table.sorted, CPU:GetTotal(5))
 	else
-		ElvUI_CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #ElvUI_CPU.frame.main.devtools.table.filtered, ElvUI_CPU:GetFiltered(5))
+		CPU.frame.main.devtools.table.edit.number:SetFormattedText("%d functions: %0.3f ms", #CPU.frame.main.devtools.table.filtered, CPU:GetFiltered(5))
 	end
 end
 
-function ElvUI_CPU:GetTotal(row)
+function CPU:GetTotal(row)
 	local x = 0
 
 	for i = 1, #self.frame.main.devtools.table.sorted do
@@ -518,7 +518,7 @@ function ElvUI_CPU:GetTotal(row)
 	return x
 end
 
-function ElvUI_CPU:GetFiltered(row)
+function CPU:GetFiltered(row)
 	local x = 0
 
 	for i = 1, #self.frame.main.devtools.table.filtered do
@@ -528,7 +528,7 @@ function ElvUI_CPU:GetFiltered(row)
 	return x
 end
 
-function ElvUI_CPU:MakeScaleable(frame)
+function CPU:MakeScaleable(frame)
 	if not frame then
 		return
 	end
@@ -872,7 +872,7 @@ function ElvUI_CPU:MakeScaleable(frame)
 
 			self.version:SetFormattedText("%.3f", self.scale)
 
-			--ElvUI_CPU:ScaleChildrens(self, scale)
+			--CPU:ScaleChildrens(self, scale)
 		else
 			self:ClearAllPoints()
 			local x = round(left)
@@ -909,12 +909,12 @@ function ElvUI_CPU:MakeScaleable(frame)
 
 			self.version:SetFormattedText("%.3f", self.scale)
 
-			--ElvUI_CPU:ScaleChildrens(self, scale)
+			--CPU:ScaleChildrens(self, scale)
 		end
 	end)
 end
 
-function ElvUI_CPU:ScaleChildrens(frame, scale)
+function CPU:ScaleChildrens(frame, scale)
 	--local childrens = {frame:GetChildren()}
 	--for _, child in ipairs(childrens) do
 	for i = 1, #self.frame.childrens do

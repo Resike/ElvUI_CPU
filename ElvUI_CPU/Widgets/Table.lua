@@ -1,6 +1,6 @@
 local _, Addon = ...
 
-local ElvUI_CPU = Addon.ElvUI_CPU
+local CPU = Addon.ElvUI_CPU
 
 local assert, strfind, tostring = assert, strfind, tostring
 local type, select, sort = type, select, sort
@@ -14,7 +14,7 @@ local BackdropTemplateMixin = BackdropTemplateMixin
 local GameFontHighlightSmall = GameFontHighlightSmall
 local GameFontNormalSmall = GameFontNormalSmall
 
-local Table = ElvUI_CPU:RegisterWidget("Table")
+local Table = CPU:RegisterWidget("Table")
 
 function Table:Create(parent)
 	self.frame = CreateFrame("Frame", nil, parent or UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)

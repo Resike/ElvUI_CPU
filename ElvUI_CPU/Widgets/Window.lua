@@ -1,6 +1,6 @@
 local _, Addon = ...
 
-local ElvUI_CPU = Addon.ElvUI_CPU
+local CPU = Addon.ElvUI_CPU
 
 local CreateFrame = CreateFrame
 local PlaySound = PlaySound
@@ -8,7 +8,7 @@ local PlaySound = PlaySound
 local UIParent = UIParent
 local GameFontHighlight = GameFontHighlight
 
-local Window = ElvUI_CPU:RegisterWidget("Window")
+local Window = CPU:RegisterWidget("Window")
 
 function Window:Create(name, parent)
 	local frame = CreateFrame("Frame", name, parent or UIParent, "BasicFrameTemplate")
