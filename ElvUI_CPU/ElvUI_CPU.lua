@@ -193,9 +193,9 @@ function CPU:CreateOptions()
 	self.frame.main.devtools.table:AddColumn("Function", 0.33)
 	self.frame.main.devtools.table:AddColumn("Calls", 0.1)
 	self.frame.main.devtools.table:AddColumn("Calls/sec", 0.11, "%.3f")
+	self.frame.main.devtools.table:AddColumn("Peak time", 0.12, "%.3f ms")
 	self.frame.main.devtools.table:AddColumn("Time/call", 0.12, "%.3f ms")
 	self.frame.main.devtools.table:AddColumn("Total time", 0.12, "%.3f ms")
-	self.frame.main.devtools.table:AddColumn("Peak time", 0.12, "%.3f ms")
 	self.frame.main.devtools.table:AddColumn("Overall", 0.1, "%.2f%%", true)
 
 	self.frame.main.devtools.table:SetScript("OnShow", function(frame)
@@ -411,7 +411,7 @@ function CPU:AddFunction(key, func)
 	local subs = false
 	local usage, calls = GetFunctionCPUUsage(func, subs)
 	usage = max(0, usage)
-	self.frame.main.devtools.table:AddRow(key, calls, calls / self:GetLoadedTime(), (usage / max(1, calls)), usage, (self.peaks[func] and self.peaks[func].ms) or 0, (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100)
+	self.frame.main.devtools.table:AddRow(key, calls, calls / self:GetLoadedTime(), (self.peaks[func] and self.peaks[func].ms) or 0, usage / max(1, calls), usage, (usage / max(1, GetAddOnCPUUsage("ElvUI"))) * 100)
 end
 
 function CPU:AddFunctions()
@@ -464,7 +464,7 @@ function CPU:UpdateFunction(key, func)
 		return
 	end
 
-	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, timepercall, usage, peaks.ms, overallusage)
+	self.frame.main.devtools.table:UpdateRow(key, calls, callspersec, peaks.ms, timepercall, usage, overallusage)
 end
 
 CPU.timer = CreateFrame('Frame')
