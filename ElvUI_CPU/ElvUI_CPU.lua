@@ -565,8 +565,7 @@ function CPU:MakeScaleable(frame)
 	end
 
 	frame:SetMovable(true)
-	frame:SetMaxResize(round(frame.width * 1.50375), round(frame.height * 1.50375))
-	frame:SetMinResize(round(frame.width * 0.66125), round(frame.height * 0.66125))
+	frame:SetResizeBounds(round(frame.width * 0.66125), round(frame.height * 0.66125), round(frame.width * 1.50375), round(frame.height * 1.50375))
 	frame:SetUserPlaced(true)
 
 	frame.br = CreateFrame("Frame", nil, frame)
