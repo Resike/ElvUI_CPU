@@ -230,8 +230,7 @@ function Table:CreateColumn(parent, text, width, format, last)
 
 	--frame:SetSize((self.frame:GetWidth() - x) * width, 24)
 	frame:SetSize(round(self.frame:GetWidth() * width), 24)
-	frame:SetMaxResize(round(frame:GetWidth() * 2), round(frame:GetHeight() * 2))
-	frame:SetMinResize(round(frame:GetWidth() / 1.4), round(frame:GetHeight() / 1.4))
+	frame:SetResizeBounds(round(frame:GetWidth() / 1.4), round(frame:GetHeight() / 1.4), round(frame:GetWidth() * 2), round(frame:GetHeight() * 2))
 
 	frame.text = frame:CreateFontString(nil, "Overlay")
 	if frame:GetID() == 1 then
