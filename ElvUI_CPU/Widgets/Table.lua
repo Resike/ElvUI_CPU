@@ -16,6 +16,9 @@ local GameFontNormalSmall = GameFontNormalSmall
 
 local Table = CPU:RegisterWidget("Table")
 
+local ElvUI = LibStub("AceAddon-3.0"):GetAddon("ElvUI")
+Addon.ElvUI = ElvUI
+
 function Table:Create(parent)
 	self.frame = CreateFrame("Frame", nil, parent or UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	self.frame:SetPoint("TopLeft", parent, "TopLeft", 0, 0)
@@ -230,8 +233,12 @@ function Table:CreateColumn(parent, text, width, format, last)
 
 	--frame:SetSize((self.frame:GetWidth() - x) * width, 24)
 	frame:SetSize(round(self.frame:GetWidth() * width), 24)
-	frame:SetMaxResize(round(frame:GetWidth() * 2), round(frame:GetHeight() * 2))
-	frame:SetMinResize(round(frame:GetWidth() / 1.4), round(frame:GetHeight() / 1.4))
+	if ElvUI.Classic then
+		frame:SetMaxResize(round(frame:GetWidth() * 2), round(frame:GetHeight() * 2))
+		frame:SetMinResize(round(frame:GetWidth() / 1.4), round(frame:GetHeight() / 1.4))
+	else
+		frame:SetResizeBounds(round(frame:GetWidth() / 1.4), round(frame:GetHeight() / 1.4),round(frame:GetWidth() * 2), round(frame:GetHeight() * 2))
+	end
 
 	frame.text = frame:CreateFontString(nil, "Overlay")
 	if frame:GetID() == 1 then
@@ -670,7 +677,8 @@ function Table:CreateRow(parent, ...)
 			self.frame.rowframes[i][j].text:SetJustifyH("Left")
 			self.frame.rowframes[i][j].text:SetHeight(24)
 			self.frame.rowframes[i][j].text:SetWordWrap(false)
-			self.frame.rowframes[i][j].text:SetText(self.frame.rowframes[i][j].text)
+
+			--self.frame.rowframes[i][j].text:SetText(self.frame.rowframes[i][j].text) --?????
 
 			self.frame.rowframes[i][j].bg = self.frame.rowframes[i][j]:CreateTexture(nil, "Background")
 			self.frame.rowframes[i][j].bg:SetAllPoints(self.frame.rowframes[i][j])

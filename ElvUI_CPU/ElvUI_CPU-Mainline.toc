@@ -1,6 +1,6 @@
-## Interface: 90207
+## Interface: 100005
 ## Title: |cff1784d1ElvUI|r |cfffe7b2cCPU Analyzer|r
-## Version: 0.1.6
+## Version: 0.1.7
 ## Author: Resike
 ## DefaultState: Enabled
 ## Dependencies: ElvUI

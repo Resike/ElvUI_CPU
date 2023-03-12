@@ -565,8 +565,14 @@ function CPU:MakeScaleable(frame)
 	end
 
 	frame:SetMovable(true)
-	frame:SetMaxResize(round(frame.width * 1.50375), round(frame.height * 1.50375))
-	frame:SetMinResize(round(frame.width * 0.66125), round(frame.height * 0.66125))
+	----Frame:SetResizeBounds(minWidth, minHeight [, maxWidth, maxHeight])
+	if ElvUI.Classic then
+		frame:SetMaxResize(round(frame.width * 1.50375), round(frame.height * 1.50375))
+		frame:SetMinResize(round(frame.width * 0.66125), round(frame.height * 0.66125))
+	else
+		frame:SetResizeBounds(round(frame.width * 0.66125), round(frame.height * 0.66125),round(frame.width * 1.50375), round(frame.height * 1.50375))
+	end
+
 	frame:SetUserPlaced(true)
 
 	frame.br = CreateFrame("Frame", nil, frame)
@@ -879,8 +885,15 @@ function CPU:MakeScaleable(frame)
 				local column = self.main.devtools.table.frame.columns[i][1]
 
 				column:SetWidth(round(self.main.devtools.table.frame:GetWidth() * self.main.devtools.table.frame.columns[i][6]))
-				column:SetMaxResize(round(column:GetWidth() * 2), round(column:GetHeight() * 2))
-				column:SetMinResize(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4))
+
+				--Frame:SetResizeBounds(minWidth, minHeight [, maxWidth, maxHeight])
+				if ElvUI.Classic then
+					column:SetMaxResize(round(column:GetWidth() * 2), round(column:GetHeight() * 2))
+					column:SetMinResize(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4))
+				else
+					column:SetResizeBounds(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4),round(column:GetWidth() * 2), round(column:GetHeight() * 2))
+				end
+
 			end
 
 			local y = round(self:GetHeight() - (self.overlay:GetHeight() * scale) + 5)
@@ -916,8 +929,13 @@ function CPU:MakeScaleable(frame)
 				local column = self.main.devtools.table.frame.columns[i][1]
 
 				column:SetWidth(round(self.main.devtools.table.frame:GetWidth() * self.main.devtools.table.frame.columns[i][6]))
-				column:SetMaxResize(round(column:GetWidth() * 2), round(column:GetHeight() * 2))
-				column:SetMinResize(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4))
+				if ElvUI.Classic then
+					column:SetMaxResize(round(column:GetWidth() * 2), round(column:GetHeight() * 2))
+					column:SetMinResize(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4))
+				else
+					column:SetResizeBounds(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4), round(column:GetWidth() * 2), round(column:GetHeight() * 2))
+				end
+
 			end
 
 			local y = round(self:GetHeight() - (self.overlay:GetHeight() * scale) + 5)
