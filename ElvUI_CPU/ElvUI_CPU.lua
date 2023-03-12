@@ -566,9 +566,13 @@ function CPU:MakeScaleable(frame)
 
 	frame:SetMovable(true)
 	----Frame:SetResizeBounds(minWidth, minHeight [, maxWidth, maxHeight])
-	frame:SetResizeBounds(round(frame.width * 0.66125), round(frame.height * 0.66125),round(frame.width * 1.50375), round(frame.height * 1.50375))
-	--frame:SetMaxResize(round(frame.width * 1.50375), round(frame.height * 1.50375))
-	--frame:SetMinResize(round(frame.width * 0.66125), round(frame.height * 0.66125))
+	if ElvUI.Classic then
+		frame:SetMaxResize(round(frame.width * 1.50375), round(frame.height * 1.50375))
+		frame:SetMinResize(round(frame.width * 0.66125), round(frame.height * 0.66125))
+	else
+		frame:SetResizeBounds(round(frame.width * 0.66125), round(frame.height * 0.66125),round(frame.width * 1.50375), round(frame.height * 1.50375))
+	end
+
 	frame:SetUserPlaced(true)
 
 	frame.br = CreateFrame("Frame", nil, frame)
