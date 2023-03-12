@@ -233,8 +233,6 @@ function Table:CreateColumn(parent, text, width, format, last)
 
 	--frame:SetSize((self.frame:GetWidth() - x) * width, 24)
 	frame:SetSize(round(self.frame:GetWidth() * width), 24)
-
-	--Frame:SetResizeBounds(minWidth, minHeight [, maxWidth, maxHeight])
 	if ElvUI.Classic then
 		frame:SetMaxResize(round(frame:GetWidth() * 2), round(frame:GetHeight() * 2))
 		frame:SetMinResize(round(frame:GetWidth() / 1.4), round(frame:GetHeight() / 1.4))
