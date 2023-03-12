@@ -16,9 +16,6 @@ local GameFontNormalSmall = GameFontNormalSmall
 
 local Table = CPU:RegisterWidget("Table")
 
-local ElvUI = LibStub("AceAddon-3.0"):GetAddon("ElvUI")
-Addon.ElvUI = ElvUI
-
 function Table:Create(parent)
 	self.frame = CreateFrame("Frame", nil, parent or UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	self.frame:SetPoint("TopLeft", parent, "TopLeft", 0, 0)
