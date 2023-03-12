@@ -34,6 +34,17 @@ end
 
 math.round = round
 
+local SetResizeBounds = function(frame, minWidth, minHeight, maxWidth, maxHeight)
+	if ElvUI.Classic then
+		frame:SetMaxResize(maxWidth, maxHeight)
+		frame:SetMinResize(minWidth, minHeight)
+	else
+		frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
+	end
+end
+
+Addon.SetResizeBounds = SetResizeBounds
+
 CPU.events = CreateFrame("Frame")
 CPU.events:RegisterEvent("ADDON_LOADED")
 
@@ -565,15 +576,9 @@ function CPU:MakeScaleable(frame)
 	end
 
 	frame:SetMovable(true)
-	----Frame:SetResizeBounds(minWidth, minHeight [, maxWidth, maxHeight])
-	if ElvUI.Classic then
-		frame:SetMaxResize(round(frame.width * 1.50375), round(frame.height * 1.50375))
-		frame:SetMinResize(round(frame.width * 0.66125), round(frame.height * 0.66125))
-	else
-		frame:SetResizeBounds(round(frame.width * 0.66125), round(frame.height * 0.66125),round(frame.width * 1.50375), round(frame.height * 1.50375))
-	end
-
 	frame:SetUserPlaced(true)
+
+	SetResizeBounds(frame, round(frame.width * 0.66125), round(frame.height * 0.66125), round(frame.width * 1.50375), round(frame.height * 1.50375))
 
 	frame.br = CreateFrame("Frame", nil, frame)
 	frame.br:SetFrameStrata(frame:GetFrameStrata())
@@ -883,16 +888,8 @@ function CPU:MakeScaleable(frame)
 				end
 
 				local column = self.main.devtools.table.frame.columns[i][1]
-
 				column:SetWidth(round(self.main.devtools.table.frame:GetWidth() * self.main.devtools.table.frame.columns[i][6]))
-
-				--Frame:SetResizeBounds(minWidth, minHeight [, maxWidth, maxHeight])
-				if ElvUI.Classic then
-					column:SetMaxResize(round(column:GetWidth() * 2), round(column:GetHeight() * 2))
-					column:SetMinResize(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4))
-				else
-					column:SetResizeBounds(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4),round(column:GetWidth() * 2), round(column:GetHeight() * 2))
-				end
+				SetResizeBounds(column, round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4), round(column:GetWidth() * 2), round(column:GetHeight() * 2))
 
 			end
 
@@ -927,15 +924,8 @@ function CPU:MakeScaleable(frame)
 				end
 
 				local column = self.main.devtools.table.frame.columns[i][1]
-
 				column:SetWidth(round(self.main.devtools.table.frame:GetWidth() * self.main.devtools.table.frame.columns[i][6]))
-				if ElvUI.Classic then
-					column:SetMaxResize(round(column:GetWidth() * 2), round(column:GetHeight() * 2))
-					column:SetMinResize(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4))
-				else
-					column:SetResizeBounds(round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4), round(column:GetWidth() * 2), round(column:GetHeight() * 2))
-				end
-
+				SetResizeBounds(column, round(column:GetWidth() / 1.4), round(column:GetHeight() / 1.4), round(column:GetWidth() * 2), round(column:GetHeight() * 2))
 			end
 
 			local y = round(self:GetHeight() - (self.overlay:GetHeight() * scale) + 5)
